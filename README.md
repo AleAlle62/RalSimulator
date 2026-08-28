@@ -151,9 +151,14 @@ regressione.
 Vue 3 · TypeScript · Vite · Tailwind CSS v4 · Vitest
 
 Font di sistema, nessuna richiesta di rete per il testo. Tema chiaro e scuro, scelta persistita e
-applicata prima del primo paint. Il componente animato `CountUp` viene da
+applicata prima del primo paint. I componenti animati `Counter` e `CountUp` vengono da
 [vue-bits](https://vue-bits.dev/); le modifiche rispetto all'originale sono documentate in
 [`src/components/vendor/README.md`](src/components/vendor/README.md).
+
+Il risultato è costruito attorno a una domanda sola, "dove sono finiti i miei soldi": una barra
+impilata divide il lordo in quattro parti con importo e percentuale, e il dettaglio contabile
+resta fuori. La prima versione mostrava un registro a righe con il saldo progressivo dopo ogni
+trattenuta: corretto, ma leggibile solo da chi sa già leggere un cedolino.
 
 Contrasti verificati in entrambi i temi: tutto il testo supera WCAG AA, con un minimo misurato di
 6,09:1 dove la soglia è 3:1.

@@ -85,18 +85,34 @@ active, disabled), stesso comportamento.
 
 - **Barra di avanzamento**: tre segmenti, quello corrente in `primary`, i completati cliccabili
   per tornare indietro.
-- **Riga di trattenuta**: etichetta, spiegazione in una riga, importo con segno, e una barra
-  proporzionale che mostra la fetta tolta rispetto al lordo.
-- **Griglia buste**: ordinaria, tredicesima, quattordicesima affiancate, con lo scomposto sotto
-  ciascuna.
-- **CountUp** (vue-bits): solo sul netto annuo, dove il conteggio comunica l'arrivo del risultato.
-  Non usato altrove: sarebbe motion decorativa.
+- **Barra di ripartizione**: una sola barra impilata che mostra come il lordo si divide in quattro
+  parti, con la legenda sotto. Sostituisce il registro a righe della prima versione, che mostrava
+  il saldo progressivo: era la vista di un contabile, non la risposta alla domanda "dove sono
+  finiti i miei soldi". Ogni voce porta importo **e** percentuale, così la proporzione si coglie
+  senza leggere le cifre.
+- **Griglia buste**: ordinaria, tredicesima, quattordicesima affiancate. Solo netto e lordo: lo
+  scomposto è già stato dato dalla barra di ripartizione.
+- **Assunzioni**: dentro un `<details>` chiuso. Servono a chi verifica, non a chi calcola.
+
+I quattro colori della ripartizione codificano un significato, non decorano: verde e teal sono
+soldi tuoi (subito o da pensionato), i due rossi sono soldi che escono. Il colore non è mai
+l'unico veicolo: accanto c'è sempre l'etichetta.
+
+### Componenti vue-bits
+
+- **Counter**: il netto annuo, con le cifre che scorrono a rullo. Molto visibile e a tema con
+  l'oggetto della pagina.
+- **CountUp**: disponibile ma non più in uso dopo che Counter ha preso il suo posto.
+
+Scartati di proposito: **Stepper** porta colori scuri cablati (`#222`, `bg-zinc-600`) che
+romperebbero il tema chiaro, e **AnimatedContent** richiede GSAP e nasconde il contenuto finché
+l'animazione non parte.
 
 ## Motion
 
 150–250 ms, `ease-out`. La transizione fra i passi è un crossfade con un leggero scorrimento
-orizzontale che segue la direzione della navigazione. Le barre delle trattenute crescono in
-sequenza quando il risultato compare.
+orizzontale che segue la direzione della navigazione. I segmenti della barra di ripartizione
+crescono in sequenza quando il risultato compare.
 
 `prefers-reduced-motion: reduce` sostituisce tutto con cambi di stato immediati. Il contenuto è
 visibile di default: nessuna animazione fa da interruttore alla visibilità.

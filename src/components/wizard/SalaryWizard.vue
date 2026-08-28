@@ -76,7 +76,7 @@ import { useWizard, type WizardStep } from '@/composables/useWizard'
 const WIZARD_STEPS: WizardStep[] = [
   { id: 'gross', title: 'Lordo', question: 'Quanto guadagni lordo in un anno?' },
   { id: 'employment', title: 'Contratto', question: 'Com’è fatto il tuo contratto?' },
-  { id: 'result', title: 'Risultato', question: 'Ecco dove finisce il tuo lordo' },
+  { id: 'result', title: 'Risultato', question: 'Ecco il tuo stipendio' },
 ]
 
 const { form, result, validationError, revision, calculate } = useSalaryCalculation()

@@ -1,55 +1,66 @@
 <template>
-  <div class="flex flex-col gap-8">
-    <div class="flex flex-col gap-4 rounded-panel bg-surface p-5">
-      <div class="flex items-baseline justify-between gap-4">
-        <span class="text-sm text-ink-muted">Retribuzione annua lorda</span>
-        <span class="text-sm font-medium tabular text-ink">
-          {{ formatEuro(breakdown.grossAnnualSalary) }}
-        </span>
-      </div>
+  <div class="flex flex-col gap-10">
+    <div class="flex flex-col items-center gap-2 rounded-panel bg-surface px-5 py-7 text-center">
+      <span class="text-sm text-ink-muted">In un anno ti restano</span>
 
-      <div class="flex flex-col gap-1 border-t border-border pt-4">
-        <span class="text-sm text-ink-muted">Netto annuo</span>
-        <span class="text-4xl font-semibold tabular text-kept">
-          <CountUp
-            :key="`net-${revision}`"
-            :to="breakdown.netAnnualSalary"
-            :duration="1.2"
-            separator="."
-          />
-          <span aria-hidden="true"> €</span>
-        </span>
-        <span class="text-xs text-ink-muted">
-          Trattenuto il {{ formatPercent(breakdown.effectiveWithholdingRate) }} del lordo, cioè
-          {{ formatEuro(breakdown.totalWithholdings) }}
-        </span>
-      </div>
+      <span class="flex items-center gap-1.5 font-semibold text-kept">
+        <Counter
+          :key="`net-${revision}`"
+          :value="Math.round(breakdown.netAnnualSalary)"
+          :places="thousandsPlaces(breakdown.netAnnualSalary)"
+          :font-size="44"
+          :gap="1"
+          :horizontal-padding="0"
+          :gradient-height="10"
+          gradient-from="var(--color-surface)"
+          gradient-to="transparent"
+          text-color="var(--color-kept)"
+          font-weight="600"
+        />
+        <span class="text-3xl" aria-hidden="true">€</span>
+      </span>
+
+      <p class="text-sm text-ink-muted">
+        Su {{ formatEuro(breakdown.grossAnnualSalary) }} lordi, cioè
+        {{ formatEuro(breakdown.payslips.ordinary.net) }} in busta ogni mese
+      </p>
     </div>
 
-    <section class="flex flex-col gap-3">
-      <h3 class="text-sm font-medium text-ink">Dove finisce il lordo</h3>
-      <WithholdingLedger :steps="steps" :gross-annual-salary="breakdown.grossAnnualSalary" />
-    </section>
+    <SalarySplitBar :shares="shares" :gross-annual-salary="breakdown.grossAnnualSalary" />
 
     <PayslipGrid :schedule="breakdown.payslips" />
 
-    <section class="flex flex-col gap-3">
-      <h3 class="text-sm font-medium text-ink">Su cosa si basa questo calcolo</h3>
-      <dl class="grid gap-x-6 gap-y-0 sm:grid-cols-2">
-        <div
-          v-for="assumption in assumptions"
-          :key="assumption.label"
-          class="flex justify-between gap-3 border-b border-border py-2"
+    <details class="group rounded-panel border border-border">
+      <summary
+        class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-ink"
+      >
+        Cosa abbiamo dato per scontato
+        <svg
+          class="h-4 w-4 shrink-0 text-ink-muted transition-transform duration-150 group-open:rotate-180"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
         >
-          <dt class="text-xs text-ink-muted">{{ assumption.label }}</dt>
-          <dd class="text-right text-xs text-ink">{{ assumption.value }}</dd>
-        </div>
-      </dl>
-      <p class="max-w-[68ch] text-xs text-ink-muted">
-        Prototipo dimostrativo per il caso standard di un impiegato: non sostituisce il conteggio
-        di un consulente del lavoro. Fonti e semplificazioni sono nel README del progetto.
-      </p>
-    </section>
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </summary>
+
+      <div class="flex flex-col gap-3 border-t border-border px-4 py-4">
+        <ul class="flex flex-col gap-1.5">
+          <li v-for="assumption in assumptions" :key="assumption" class="flex gap-2 text-xs text-ink-muted">
+            <span class="text-ink-muted" aria-hidden="true">·</span>
+            <span>{{ assumption }}</span>
+          </li>
+        </ul>
+        <p class="text-xs text-ink-muted">
+          È un prototipo dimostrativo, non sostituisce il conteggio di un consulente del lavoro.
+        </p>
+      </div>
+    </details>
   </div>
 </template>
 
@@ -57,11 +68,11 @@
 import { computed, toRef } from 'vue'
 
 import PayslipGrid from '../result/PayslipGrid.vue'
-import WithholdingLedger from '../result/WithholdingLedger.vue'
-import CountUp from '../vendor/CountUp.vue'
-import { useWaterfallSteps } from '@/composables/useWaterfallSteps'
+import SalarySplitBar from '../result/SalarySplitBar.vue'
+import Counter from '../vendor/Counter.vue'
+import { useSalarySplit } from '@/composables/useSalarySplit'
 import { TAX_YEAR_2026, type SalaryBreakdown } from '@/domain'
-import { formatEuro, formatPercent } from '@/presentation/formatters'
+import { formatEuro } from '@/presentation/formatters'
 import { SECTOR_LABELS } from '@/presentation/payslipLabels'
 
 const props = defineProps<{
@@ -69,17 +80,28 @@ const props = defineProps<{
   revision: number
 }>()
 
-const steps = useWaterfallSteps(toRef(props, 'breakdown'))
+const shares = useSalarySplit(toRef(props, 'breakdown'))
+
+/** Counter renders one column per place, so the thousands dot has to be passed in explicitly. */
+function thousandsPlaces(value: number): (number | '.')[] {
+  const digitCount = Math.max(1, Math.round(Math.abs(value))).toString().length
+  const places: (number | '.')[] = []
+
+  for (let exponent = digitCount - 1; exponent >= 0; exponent -= 1) {
+    places.push(10 ** exponent)
+    if (exponent > 0 && exponent % 3 === 0) {
+      places.push('.')
+    }
+  }
+
+  return places
+}
 
 const assumptions = computed(() => [
-  { label: 'Anno d’imposta', value: String(TAX_YEAR_2026.year) },
-  { label: 'Settore', value: SECTOR_LABELS[props.breakdown.input.sector] },
-  { label: 'Inquadramento', value: 'Impiegato a tempo indeterminato, anno intero' },
-  {
-    label: 'Residenza',
-    value: `${TAX_YEAR_2026.municipalSurtax.municipality}, ${TAX_YEAR_2026.regionalSurtax.region}`,
-  },
-  { label: 'Familiari a carico', value: 'Nessuno' },
-  { label: 'Agevolazioni', value: 'Nessuna' },
+  `Anno d’imposta ${TAX_YEAR_2026.year}, impiegato a tempo indeterminato per l’anno intero`,
+  `Contratto del settore ${SECTOR_LABELS[props.breakdown.input.sector].toLowerCase()}`,
+  `Residenza a ${TAX_YEAR_2026.municipalSurtax.municipality}, in ${TAX_YEAR_2026.regionalSurtax.region}`,
+  'Nessun familiare a carico',
+  'Nessuna agevolazione e nessun fondo pensione',
 ])
 </script>

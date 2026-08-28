@@ -11,9 +11,9 @@ export const PAYSLIP_LABELS: Record<PayslipKind, string> = {
 }
 
 export const PAYSLIP_OCCURRENCES: Record<PayslipKind, string> = {
-  ordinary: '× 12',
-  thirteenth: '× 1',
-  fourteenth: '× 1',
+  ordinary: '(×12)',
+  thirteenth: '(×1)',
+  fourteenth: '(×1)',
 }
 
 export const SECTOR_LABELS: Record<Sector, string> = {

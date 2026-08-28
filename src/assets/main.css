@@ -14,6 +14,11 @@
   --color-primary-contrast: oklch(1 0 0);
   --color-withheld: oklch(0.505 0.155 25);
   --color-kept: oklch(0.47 0.11 155);
+  /* The four slices of the gross: two you keep, two you don't. */
+  --color-share-kept: oklch(0.55 0.13 155);
+  --color-share-pension: oklch(0.6 0.085 200);
+  --color-share-tax: oklch(0.55 0.16 25);
+  --color-share-local: oklch(0.72 0.1 40);
 
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
@@ -40,6 +45,10 @@
   --color-primary-contrast: oklch(0.174 0.012 240);
   --color-withheld: oklch(0.72 0.14 25);
   --color-kept: oklch(0.76 0.13 155);
+  --color-share-kept: oklch(0.7 0.14 155);
+  --color-share-pension: oklch(0.68 0.09 200);
+  --color-share-tax: oklch(0.62 0.16 25);
+  --color-share-local: oklch(0.75 0.11 40);
 }
 
 @layer base {

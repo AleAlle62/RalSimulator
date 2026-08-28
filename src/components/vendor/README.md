@@ -3,9 +3,17 @@
 File copiati da librerie esterne, non scritti per questo progetto. Vanno tenuti invariati:
 se serve un comportamento diverso, si adatta il consumo lato applicazione.
 
-| File          | Origine                                                            | Licenza |
-| ------------- | ------------------------------------------------------------------ | ------- |
-| `CountUp.vue` | [vue-bits](https://vue-bits.dev/) — `TextAnimations/CountUp`        | MIT     |
+| File           | Origine                                                       | Licenza |
+| -------------- | ------------------------------------------------------------- | ------- |
+| `Counter.vue`  | [vue-bits](https://vue-bits.dev/) — `Components/Counter`       | MIT     |
+| `CountUp.vue`  | [vue-bits](https://vue-bits.dev/) — `TextAnimations/CountUp`   | MIT     |
+
+`Counter.vue` è usato per il netto annuo ed è invariato rispetto all'originale. Richiede
+`motion-v`. Non produce il separatore delle migliaia da solo: la prop `places` viene costruita
+lato applicazione inserendo il punto al posto giusto.
+
+`CountUp.vue` non è più usato dopo l'adozione di `Counter`; resta in repository perché è il
+componente su cui sono documentate le divergenze qui sotto.
 
 ## Divergenze dall'upstream
 
