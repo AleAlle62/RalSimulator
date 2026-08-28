@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Simulatore RAL — dal lordo al netto, anno d'imposta 2026</title>
+    <meta
+      name="description"
+      content="Calcola il netto annuale e mensile a partire dalla RAL, con il dettaglio di ogni trattenuta. Impiegato a tempo indeterminato, Milano, anno d'imposta 2026."
+    />
+    <script>
+      // Applied before first paint so the correct theme is never repainted.
+      (() => {
+        const stored = localStorage.getItem('ral-simulator-theme')
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (stored === 'dark' || (stored === null && prefersDark)) {
+          document.documentElement.classList.add('dark')
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
