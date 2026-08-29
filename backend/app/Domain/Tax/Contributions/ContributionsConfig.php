@@ -2,7 +2,7 @@
 
 namespace App\Domain\Tax\Contributions;
 
-use App\Domain\Tax\Sector;
+use App\Domain\Sector;
 
 /**
  * The legal parameters of employee side INPS contributions for one tax year.

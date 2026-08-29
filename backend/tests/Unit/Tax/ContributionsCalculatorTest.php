@@ -1,8 +1,8 @@
 <?php
 
+use App\Domain\Sector;
 use App\Domain\Tax\Contributions\ContributionsCalculator;
 use App\Domain\Tax\Contributions\ContributionsConfig;
-use App\Domain\Tax\Sector;
 
 /** The 2026 parameters. Source: INPS, Circolare n. 6 del 30/01/2026. */
 function contributionsConfig2026(): ContributionsConfig

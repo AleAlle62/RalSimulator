@@ -2,7 +2,7 @@
 
 namespace App\Domain\Tax\Contributions;
 
-use App\Domain\Tax\Sector;
+use App\Domain\Sector;
 
 /**
  * Employee side INPS contributions: a rate on the salary, a ceiling above which nothing more
