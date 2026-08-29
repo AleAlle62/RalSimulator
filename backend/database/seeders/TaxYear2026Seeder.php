@@ -24,13 +24,29 @@ class TaxYear2026Seeder extends Seeder
 {
     private const CONTRIBUTIONS = 'INPS, circolare n. 6 del 30/01/2026';
 
+    private const CONTRIBUTIONS_URL = 'https://www.inps.it/it/it/inps-comunica/atti/circolari-messaggi-e-normativa/dettaglio.circolari-e-messaggi.2026.01.circolare-numero-6-del-30-01-2026_15151.html';
+
     private const EMPLOYMENT_RELIEF = 'Art. 13 TUIR, testo in vigore dal 01/01/2026';
 
-    private const WEDGE_CUT = 'L. 207/2024 art. 1 — taglio del cuneo fiscale';
+    private const EMPLOYMENT_RELIEF_URL = 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:presidente.repubblica:decreto:1986;917';
+
+    /**
+     * Cited as the 2025 budget law, not the 2026 one: this is where the exempt bonus and the
+     * relief were legislated (art. 1 commi 4 e 6), and the measure was made structural, with
+     * no sunset clause. The 2026 budget law leaves the figures untouched; a fresh citation
+     * every year would misstate which law actually set the numbers.
+     */
+    private const WEDGE_CUT = 'L. 207/2024 art. 1 commi 4 e 6 — taglio del cuneo fiscale, misura strutturale';
+
+    private const WEDGE_CUT_URL = 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:legge:2024-12-30;207';
 
     private const SUPPLEMENTARY = 'Art. 1 D.L. 3/2020, come modificato da L. 207/2024 art. 1 co. 3';
 
+    private const SUPPLEMENTARY_URL = 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legge:2020-02-05;3';
+
     private const IRPEF = 'L. 199/2025 (Legge di Bilancio 2026) art. 1 co. 3';
+
+    private const IRPEF_URL = 'https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:legge:2025-12-30;199';
 
     public function run(): void
     {
@@ -50,55 +66,55 @@ class TaxYear2026Seeder extends Seeder
 
     private function constants(TaxYear $year): void
     {
-        foreach ($this->values() as [$key, $value, $source]) {
+        foreach ($this->values() as [$key, $value, $label, $url]) {
             TaxConstant::updateOrCreate(
                 ['tax_year_id' => $year->id, 'key' => $key],
-                ['value' => $value, 'source_label' => $source],
+                ['value' => $value, 'source_label' => $label, 'source_url' => $url],
             );
         }
     }
 
     /**
-     * @return array<int, array{TaxConstantKey, float, string}>
+     * @return array<int, array{TaxConstantKey, float, string, string}>
      */
     private function values(): array
     {
         return [
             // IVS is 9,19% in both sectors; industry adds the 0,30% CIGS contribution. The
             // 56.224 threshold is the figure stale calculators still report as 52.190.
-            [TaxConstantKey::ContributionRateCommerce, 0.0919, self::CONTRIBUTIONS],
-            [TaxConstantKey::ContributionRateIndustry, 0.0949, self::CONTRIBUTIONS],
-            [TaxConstantKey::ContributionAdditionalRate, 0.01, self::CONTRIBUTIONS],
-            [TaxConstantKey::ContributionAdditionalRateThreshold, 56_224, self::CONTRIBUTIONS],
-            [TaxConstantKey::ContributionAnnualCeiling, 122_295, self::CONTRIBUTIONS],
+            [TaxConstantKey::ContributionRateCommerce, 0.0919, self::CONTRIBUTIONS, self::CONTRIBUTIONS_URL],
+            [TaxConstantKey::ContributionRateIndustry, 0.0949, self::CONTRIBUTIONS, self::CONTRIBUTIONS_URL],
+            [TaxConstantKey::ContributionAdditionalRate, 0.01, self::CONTRIBUTIONS, self::CONTRIBUTIONS_URL],
+            [TaxConstantKey::ContributionAdditionalRateThreshold, 56_224, self::CONTRIBUTIONS, self::CONTRIBUTIONS_URL],
+            [TaxConstantKey::ContributionAnnualCeiling, 122_295, self::CONTRIBUTIONS, self::CONTRIBUTIONS_URL],
 
-            [TaxConstantKey::EmploymentReliefFlatUpTo, 15_000, self::EMPLOYMENT_RELIEF],
-            [TaxConstantKey::EmploymentReliefFlatAmount, 1_955, self::EMPLOYMENT_RELIEF],
-            [TaxConstantKey::EmploymentReliefFirstTaperUpTo, 28_000, self::EMPLOYMENT_RELIEF],
-            [TaxConstantKey::EmploymentReliefFirstTaperBase, 1_910, self::EMPLOYMENT_RELIEF],
-            [TaxConstantKey::EmploymentReliefFirstTaperVariable, 1_190, self::EMPLOYMENT_RELIEF],
-            [TaxConstantKey::EmploymentReliefSecondTaperUpTo, 50_000, self::EMPLOYMENT_RELIEF],
-            [TaxConstantKey::EmploymentReliefSecondTaperBase, 1_910, self::EMPLOYMENT_RELIEF],
+            [TaxConstantKey::EmploymentReliefFlatUpTo, 15_000, self::EMPLOYMENT_RELIEF, self::EMPLOYMENT_RELIEF_URL],
+            [TaxConstantKey::EmploymentReliefFlatAmount, 1_955, self::EMPLOYMENT_RELIEF, self::EMPLOYMENT_RELIEF_URL],
+            [TaxConstantKey::EmploymentReliefFirstTaperUpTo, 28_000, self::EMPLOYMENT_RELIEF, self::EMPLOYMENT_RELIEF_URL],
+            [TaxConstantKey::EmploymentReliefFirstTaperBase, 1_910, self::EMPLOYMENT_RELIEF, self::EMPLOYMENT_RELIEF_URL],
+            [TaxConstantKey::EmploymentReliefFirstTaperVariable, 1_190, self::EMPLOYMENT_RELIEF, self::EMPLOYMENT_RELIEF_URL],
+            [TaxConstantKey::EmploymentReliefSecondTaperUpTo, 50_000, self::EMPLOYMENT_RELIEF, self::EMPLOYMENT_RELIEF_URL],
+            [TaxConstantKey::EmploymentReliefSecondTaperBase, 1_910, self::EMPLOYMENT_RELIEF, self::EMPLOYMENT_RELIEF_URL],
 
-            [TaxConstantKey::WedgeCutExemptBonusUpTo, 20_000, self::WEDGE_CUT],
-            [TaxConstantKey::WedgeCutReliefFlatUpTo, 32_000, self::WEDGE_CUT],
-            [TaxConstantKey::WedgeCutReliefFlatAmount, 1_000, self::WEDGE_CUT],
-            [TaxConstantKey::WedgeCutReliefTaperUpTo, 40_000, self::WEDGE_CUT],
+            [TaxConstantKey::WedgeCutExemptBonusUpTo, 20_000, self::WEDGE_CUT, self::WEDGE_CUT_URL],
+            [TaxConstantKey::WedgeCutReliefFlatUpTo, 32_000, self::WEDGE_CUT, self::WEDGE_CUT_URL],
+            [TaxConstantKey::WedgeCutReliefFlatAmount, 1_000, self::WEDGE_CUT, self::WEDGE_CUT_URL],
+            [TaxConstantKey::WedgeCutReliefTaperUpTo, 40_000, self::WEDGE_CUT, self::WEDGE_CUT_URL],
 
             // The 75 is the offset in the capacity test: on the lowest incomes the allowance
             // is compared against the employment relief lowered by this much, not against the
             // relief itself. It is what almost every online calculator gets wrong.
-            [TaxConstantKey::SupplementaryAllowanceFullUpTo, 15_000, self::SUPPLEMENTARY],
-            [TaxConstantKey::SupplementaryAllowanceFullAmount, 1_200, self::SUPPLEMENTARY],
-            [TaxConstantKey::SupplementaryAllowancePartialUpTo, 28_000, self::SUPPLEMENTARY],
-            [TaxConstantKey::SupplementaryAllowanceCapacityTestReliefOffset, 75, self::SUPPLEMENTARY],
+            [TaxConstantKey::SupplementaryAllowanceFullUpTo, 15_000, self::SUPPLEMENTARY, self::SUPPLEMENTARY_URL],
+            [TaxConstantKey::SupplementaryAllowanceFullAmount, 1_200, self::SUPPLEMENTARY, self::SUPPLEMENTARY_URL],
+            [TaxConstantKey::SupplementaryAllowancePartialUpTo, 28_000, self::SUPPLEMENTARY, self::SUPPLEMENTARY_URL],
+            [TaxConstantKey::SupplementaryAllowanceCapacityTestReliefOffset, 75, self::SUPPLEMENTARY, self::SUPPLEMENTARY_URL],
         ];
     }
 
     /** The second band fell from 35% to 33% with effect from 01/01/2026. */
     private function irpefBrackets(TaxYear $year): void
     {
-        $this->replaceBrackets($year, BracketKind::Irpef, self::IRPEF, [
+        $this->replaceBrackets($year, BracketKind::Irpef, self::IRPEF, self::IRPEF_URL, [
             [28_000, 0.23],
             [50_000, 0.33],
             [null, 0.43],
@@ -111,7 +127,7 @@ class TaxYear2026Seeder extends Seeder
      */
     private function wedgeCutBrackets(TaxYear $year): void
     {
-        $this->replaceBrackets($year, BracketKind::WedgeCutExemptBonus, self::WEDGE_CUT, [
+        $this->replaceBrackets($year, BracketKind::WedgeCutExemptBonus, self::WEDGE_CUT, self::WEDGE_CUT_URL, [
             [8_500, 0.071],
             [15_000, 0.053],
             [20_000, 0.048],
@@ -125,7 +141,7 @@ class TaxYear2026Seeder extends Seeder
      *
      * @param  array<int, array{float|null, float}>  $bands
      */
-    private function replaceBrackets(TaxYear $year, BracketKind $kind, string $source, array $bands): void
+    private function replaceBrackets(TaxYear $year, BracketKind $kind, string $label, string $url, array $bands): void
     {
         $year->brackets()->where('kind', $kind)->whereNull('owner_id')->delete();
 
@@ -136,7 +152,8 @@ class TaxYear2026Seeder extends Seeder
                 'upper_bound' => $upperBound,
                 'rate' => $rate,
                 'position' => $position,
-                'source_label' => $source,
+                'source_label' => $label,
+                'source_url' => $url,
             ]);
         }
     }

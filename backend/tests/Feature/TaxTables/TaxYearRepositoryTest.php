@@ -9,8 +9,11 @@ use App\Domain\Tax\Irpef\IrpefCalculator;
 use App\Domain\Tax\Reliefs\ReliefsCalculator;
 use App\Domain\Tax\Surtaxes\SurtaxesCalculator;
 use App\Domain\Tax\TaxYear2026;
+use App\Models\TaxBracket;
 use App\Models\TaxConstant;
+use App\Models\TaxRegion;
 use App\Models\TaxYear;
+use App\TaxTables\BracketKind;
 use App\TaxTables\MissingTaxDataException;
 use App\TaxTables\TaxConstantKey;
 use App\TaxTables\TaxYearRepository;
@@ -84,15 +87,31 @@ it('refuses a year that has not been published', function () {
         ->toThrow(MissingTaxDataException::class);
 });
 
+it('computes a configuration for every seeded city, not only Milano', function () {
+    // Every region now has bands, so nothing should stop any of the eight seeded cities from
+    // producing a full configuration — this is the regression test for that milestone.
+    $cities = ['Milano', 'Roma', 'Napoli', 'Bologna', 'Firenze', 'Bari', 'Venezia', 'Palermo'];
+
+    foreach ($cities as $city) {
+        $config = $this->repository->configFor(2026, $city);
+
+        expect($config->surtaxes->municipality)->toBe($city);
+    }
+});
+
 it('refuses a municipality it has no rates for', function () {
     expect(fn () => $this->repository->configFor(2026, 'Cinisello Balsamo'))
         ->toThrow(MissingTaxDataException::class);
 });
 
 it('refuses a city whose region has no rates rather than treating the surtax as zero', function () {
-    // Roma is seeded with its own verified rate, but Lazio's bands have not been researched.
+    // Every seeded region now has its bands, so the gap this guards against has to be made by
+    // hand: Roma with Lazio's surtax removed, standing in for a region not yet researched.
     // Reading that silence as a surtax of zero would cost the taxpayer a few hundred euro and
     // look entirely ordinary on screen.
+    $lazio = TaxRegion::query()->where('name', 'Lazio')->firstOrFail();
+    TaxBracket::query()->where('kind', BracketKind::RegionalSurtax)->where('owner_id', $lazio->id)->delete();
+
     expect(fn () => $this->repository->configFor(2026, 'Roma'))
         ->toThrow(MissingTaxDataException::class);
 });

@@ -12,38 +12,33 @@ use Illuminate\Database\Seeder;
 /**
  * Where you live: the regional surtax and the municipal one.
  *
- * Eight cities are seeded with rates read off the MEF list, each with the deliberation that
- * set it. Their regions are seeded too, but only **Lombardia** carries bands: it is the one
- * region whose rates have been verified. The other seven are rows with a name and a place to
- * look, and nothing else.
+ * Eight regions and the eight cities that sit in them, every one read off a primary source:
+ * the municipal rate and its exemption from the MEF municipal list, each region's bands from
+ * MEF's region by region page (`addregirpef.php?reg=`, one id per region, verified here
+ * against Lombardia's already known figures before trusting the other seven). All eight cities
+ * compute end to end.
  *
- * That gap is deliberate and enforced. Seeding a region with no bands and letting the
- * calculator read the silence as a surtax of zero would produce a net salary that is wrong by
- * a few hundred euro and looks perfectly ordinary; the repository refuses instead. So today
- * only Milano computes end to end, and the other seven wait for their region — which is a
- * data entry job, not a code change.
+ * Torino and Genova are absent for a different reason: they charge bands of their own instead
+ * of one rate behind an exemption, and the engine does not compute those yet.
  *
- * Torino and Genova are absent for a different reason: they charge bands of their own, and
- * the engine still treats the municipal surtax as one rate behind an exemption.
+ * `TaxYearRepository` still refuses a region with no bands rather than reading the silence as
+ * a surtax of zero — that guard has no live example left to lean on now that every seeded
+ * region is complete, so the test exercises it by removing a region's bands itself.
  */
 class TaxPlaces2026Seeder extends Seeder
 {
     private const MEF_MUNICIPAL_LIST = 'https://www.finanze.gov.it/it/fiscalita/fiscalita-regionale-e-locale/Addizionale-comunale-allIRPEF/aliquote-applicabili/Elenchi-generali-aggiornati-quotidianamente/';
 
-    private const MEF_REGIONAL_LIST = 'https://www1.finanze.gov.it/finanze2/dipartimentopolitichefiscali/fiscalitalocale/addregirpef/sceltaregione.htm';
-
     private const MEF_MUNICIPAL_LABEL = 'MEF — elenco generale delle addizionali comunali';
 
-    private const MEF_REGIONAL_LABEL = 'MEF — addizionali regionali IRPEF';
-
-    private const LOMBARDIA_LABEL = 'Regione Lombardia, addizionale regionale IRPEF, aliquote invariate dal 2022';
+    private const MEF_REGIONAL_BASE_URL = 'https://www1.finanze.gov.it/finanze2/dipartimentopolitichefiscali/fiscalitalocale/addregirpef/addregirpef.php?reg=';
 
     public function run(): void
     {
         $year = TaxYear::query()->where('year', 2026)->firstOrFail();
 
         $regions = $this->regions($year);
-        $this->lombardiaBrackets($year, $regions['Lombardia']);
+        $this->regionalBrackets($year, $regions);
         $this->municipalities($year, $regions);
     }
 
@@ -52,56 +47,141 @@ class TaxPlaces2026Seeder extends Seeder
      */
     private function regions(TaxYear $year): array
     {
-        $names = [
-            'Lombardia' => self::LOMBARDIA_LABEL,
-            'Lazio' => self::MEF_REGIONAL_LABEL,
-            'Campania' => self::MEF_REGIONAL_LABEL,
-            'Emilia-Romagna' => self::MEF_REGIONAL_LABEL,
-            'Toscana' => self::MEF_REGIONAL_LABEL,
-            'Puglia' => self::MEF_REGIONAL_LABEL,
-            'Veneto' => self::MEF_REGIONAL_LABEL,
-            'Sicilia' => self::MEF_REGIONAL_LABEL,
-        ];
-
         $regions = [];
 
-        foreach ($names as $name => $label) {
+        foreach ($this->regionDefinitions() as $name => ['label' => $label, 'mefId' => $mefId]) {
             $regions[$name] = TaxRegion::updateOrCreate(
                 ['tax_year_id' => $year->id, 'name' => $name],
-                ['source_label' => $label, 'source_url' => self::MEF_REGIONAL_LIST],
+                ['source_label' => $label, 'source_url' => self::MEF_REGIONAL_BASE_URL.$mefId],
             );
         }
 
         return $regions;
     }
 
-    /** Progressive and sliced, exactly like IRPEF: each rate applies to its own band. */
-    private function lombardiaBrackets(TaxYear $year, TaxRegion $lombardia): void
+    /**
+     * @param  array<string, TaxRegion>  $regions
+     */
+    private function regionalBrackets(TaxYear $year, array $regions): void
     {
-        $bands = [
-            [15_000, 0.0123],
-            [28_000, 0.0158],
-            [50_000, 0.0172],
-            [null, 0.0173],
-        ];
+        foreach ($this->regionDefinitions() as $name => ['label' => $label, 'mefId' => $mefId, 'bands' => $bands]) {
+            $region = $regions[$name];
+            $url = self::MEF_REGIONAL_BASE_URL.$mefId;
 
-        $year->brackets()
-            ->where('kind', BracketKind::RegionalSurtax)
-            ->where('owner_id', $lombardia->id)
-            ->delete();
+            $year->brackets()
+                ->where('kind', BracketKind::RegionalSurtax)
+                ->where('owner_id', $region->id)
+                ->delete();
 
-        foreach ($bands as $position => [$upperBound, $rate]) {
-            TaxBracket::create([
-                'tax_year_id' => $year->id,
-                'kind' => BracketKind::RegionalSurtax,
-                'owner_id' => $lombardia->id,
-                'upper_bound' => $upperBound,
-                'rate' => $rate,
-                'position' => $position,
-                'source_label' => self::LOMBARDIA_LABEL,
-                'source_url' => self::MEF_REGIONAL_LIST,
-            ]);
+            foreach ($bands as $position => [$upperBound, $rate]) {
+                TaxBracket::create([
+                    'tax_year_id' => $year->id,
+                    'kind' => BracketKind::RegionalSurtax,
+                    'owner_id' => $region->id,
+                    'upper_bound' => $upperBound,
+                    'rate' => $rate,
+                    'position' => $position,
+                    'source_label' => $label,
+                    'source_url' => $url,
+                ]);
+            }
         }
+    }
+
+    /**
+     * Every region here uses the same four boundaries (15.000 · 28.000 · 50.000) as IRPEF
+     * itself, MEF's `reg=` id is the one used to build each region's precise source link, and
+     * the bands are read with `apply`, sliced like IRPEF, not picked whole with `rateFor`.
+     *
+     * Lombardia is unchanged from the figures already verified against
+     * App\Domain\Tax\TaxYear2026; fetching it again from MEF here returned the identical four
+     * rates, which is what made trusting the same endpoint for the other seven worth doing.
+     *
+     * @return array<string, array{label: string, mefId: string, bands: array<int, array{int|null, float}>}>
+     */
+    private function regionDefinitions(): array
+    {
+        return [
+            'Lombardia' => [
+                'label' => 'Regione Lombardia, art. 72 c. 1 L.R. 14/07/2003 n. 10, aliquote invariate dal 2022',
+                'mefId' => '10',
+                'bands' => [
+                    [15_000, 0.0123],
+                    [28_000, 0.0158],
+                    [50_000, 0.0172],
+                    [null, 0.0173],
+                ],
+            ],
+            'Lazio' => [
+                // The 1,73% band stops at 15.000, not 28.000: several secondary sources report
+                // the wider threshold, but MEF's own table draws the line at 15.000.
+                'label' => 'Regione Lazio, L.R. 20 del 31/12/2025',
+                'mefId' => '08',
+                'bands' => [
+                    [15_000, 0.0173],
+                    [null, 0.0333],
+                ],
+            ],
+            'Campania' => [
+                'label' => 'Regione Campania, L.R. 4/2014 e L.R. 7/2022',
+                'mefId' => '05',
+                'bands' => [
+                    [15_000, 0.0173],
+                    [28_000, 0.0296],
+                    [50_000, 0.0320],
+                    [null, 0.0333],
+                ],
+            ],
+            'Emilia-Romagna' => [
+                'label' => 'Regione Emilia-Romagna, L.R. 19/2006 come modificata da L.R. 1/2025 e L.R. 9/2025',
+                'mefId' => '06',
+                'bands' => [
+                    [15_000, 0.0133],
+                    [28_000, 0.0193],
+                    [50_000, 0.0278],
+                    [null, 0.0333],
+                ],
+            ],
+            'Toscana' => [
+                'label' => 'Regione Toscana, art. 1 L.R. 48 del 28/12/2023',
+                'mefId' => '17',
+                'bands' => [
+                    [15_000, 0.0142],
+                    [28_000, 0.0143],
+                    [50_000, 0.0332],
+                    [null, 0.0333],
+                ],
+            ],
+            'Puglia' => [
+                // Raised by a decree covering the regional health service deficit; several
+                // secondary sources still report the pre-decree 1,23%–2,23% range.
+                'label' => 'Regione Puglia, decreto n. 3 del 28/05/2026 (commissario ad acta)',
+                'mefId' => '14',
+                'bands' => [
+                    [15_000, 0.0133],
+                    [28_000, 0.0213],
+                    [50_000, 0.0323],
+                    [null, 0.0333],
+                ],
+            ],
+            'Veneto' => [
+                // A single rate for everyone: no bands to slice, one band with no upper bound.
+                // The reduced 0,9% rate for disability is out of scope, like every relief tied
+                // to a dependent family member.
+                'label' => 'Regione Veneto, L.R. 19/2005 art. 1 c. 5, aliquota unica',
+                'mefId' => '21',
+                'bands' => [
+                    [null, 0.0123],
+                ],
+            ],
+            'Sicilia' => [
+                'label' => 'Regione Sicilia, L.R. 2/2007 art. 1, aliquota unica',
+                'mefId' => '16',
+                'bands' => [
+                    [null, 0.0123],
+                ],
+            ],
+        ];
     }
 
     /**

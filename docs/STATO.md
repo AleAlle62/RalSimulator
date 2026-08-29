@@ -83,7 +83,7 @@ Sei tabelle migrate:
 Le costanti sono **20 e non 22**: aliquota comunale e soglia di esenzione cambiano da comune a
 comune, quindi sono colonne di `tax_municipalities`, non costanti dell'anno.
 
-### Seeder e repository — completo, 8 test verdi
+### Seeder e repository — completo, 9 test verdi
 
 ```
 app/TaxTables/
@@ -97,7 +97,7 @@ Sta fuori da `app/Domain/` di proposito: queste chiavi esistono solo perché lo 
 chiave/valore. È persistenza, non dominio — il motore non sa che le aliquote siano mai state righe.
 
 Sei modelli Eloquent in `app/Models/`, due seeder: `TaxYear2026Seeder` (anno, 20 costanti,
-scaglioni IRPEF e cuneo) e `TaxPlaces2026Seeder` (8 regioni, scaglioni Lombardia, 8 comuni).
+scaglioni IRPEF e cuneo) e `TaxPlaces2026Seeder` (8 regioni **tutte con scaglioni**, 8 comuni).
 
 **Il seeder riscrive i valori a mano invece di leggerli da `TaxYear2026`.** La duplicazione è
 voluta: è partita doppia. Se il seeder copiasse dalla classe, i due coinciderebbero per
@@ -112,7 +112,36 @@ Verificato dal database: config identica a `TaxYear2026::config()`, e RAL 35.000
 **Il repository si rifiuta di rispondere** se manca un dato: anno non pubblicato, comune
 sconosciuto, costante assente, regione senza scaglioni, comune ad aliquote proprie. Ognuna di
 queste poteva essere uno zero di default — ed è esattamente il fallimento che il progetto vuole
-evitare, perché il risultato sembrerebbe uno stipendio, plausibile al centesimo e sbagliato.
+evitare, perché il risultato sembrerebbe uno stipendio, plausibile al centesimo e sbagliato. Con
+tutte le regioni seedate quel guardrail non ha più un caso reale su cui appoggiarsi, quindi il
+test lo simula rimuovendo a mano gli scaglioni del Lazio.
+
+### Tutte e 8 le regioni, tutte e 8 le città calcolano
+
+Le 7 regioni che mancavano (Lazio, Campania, Emilia-Romagna, Toscana, Puglia, Veneto, Sicilia)
+sono state prese dall'endpoint MEF regione per regione
+(`addregirpef.php?reg=<id>`, un id per regione, elenco in `sceltaregione.htm`) — la stessa fonte
+già usata per i comuni. Verificato prima su Lombardia: torna esattamente 1,23 · 1,58 · 1,72 ·
+1,73 %, gli stessi valori già confermati in `TaxYear2026`; solo dopo mi sono fidato dell'endpoint
+per le altre sette.
+
+Due correzioni rispetto a quello che si trova cercando in giro:
+
+- **Lazio** scatta al 3,33 % già sopra i 15.000 € di imponibile, non sopra i 28.000 come
+  riportano diverse fonti secondarie — MEF traccia la soglia a 15.000.
+- **Sicilia** è aliquota unica 1,23 % senza eccezioni. Una fonte trovata prima parlava di un
+  1,73 % sotto i 28.000, probabilmente contaminata dalla legge del Lazio: entrambe le leggi
+  regionali si chiamano "L.R. 20 del 31/12/2025", stessa data e stesso numero, regioni diverse.
+- **Puglia** ha un'aliquota più alta (1,33–3,33 %) di quella riportata da vari calcolatori
+  online (1,23–2,23 %): un decreto del commissario ad acta del 28/05/2026 l'ha rideterminata
+  per coprire il disavanzo sanitario regionale, e le fonti secondarie non l'hanno ancora recepito.
+
+Veneto e Sicilia sono aliquota unica (un solo scaglione, nessuna fetta da tagliare); le altre
+cinque seguono le stesse tre soglie di IRPEF e Lombardia (15.000 · 28.000 · 50.000).
+
+**Non modellate:** l'aliquota ridotta 0,9 % per disabilità in Veneto, le detrazioni per figli a
+carico di Lazio, Campania e Sicilia — sono tutte agevolazioni legate a familiari a carico, già
+fuori scope per lo stesso motivo dichiarato in `CLAUDE.md`.
 
 ---
 
@@ -153,22 +182,18 @@ evitare, perché il risultato sembrerebbe uno stipendio, plausibile al centesimo
 
 ## Dati fiscali: cosa c'è e cosa manca
 
-### Le 8 città seedate, verificate sull'elenco MEF
+### Le 8 città seedate, verificate sull'elenco MEF — tutte calcolano
 
-Tutte e otto sono in `tax_municipalities`, ma **solo Milano calcola**: le altre sette hanno
-l'aliquota comunale verificata e la regione senza scaglioni, e il repository si rifiuta di
-rispondere finché non ci sono. Sbloccarle è inserire dati, non scrivere codice.
-
-| Città | Aliquota | Esenzione | Delibera | Calcola |
-| --- | --- | --- | --- | --- |
-| Milano | 0,8 % | 23.000 | n. 46 · 28/09/2020 | sì |
-| Roma | 0,9 % | 14.000 | n. 186 · 19/12/2024 | manca Lazio |
-| Napoli | 1,0 % | 12.000 | n. 143 · 29/12/2023 | manca Campania |
-| Bologna | 0,8 % | 15.000 | n. 354 · 22/12/2016 | manca Emilia-Romagna |
-| Firenze | 0,2 % | 25.000 | n. 47 · 28/07/2014 | manca Toscana |
-| Bari | 0,8 % | 15.000 | n. 42 · 31/07/2012 | manca Puglia |
-| Venezia | 0,8 % | 10.000 | n. 67 · 20/12/2023 | manca Veneto |
-| Palermo | 1,014 % | — | n. 6 · 25/02/2025 | manca Sicilia |
+| Città | Aliquota | Esenzione | Delibera |
+| --- | --- | --- | --- |
+| Milano | 0,8 % | 23.000 | n. 46 · 28/09/2020 |
+| Roma | 0,9 % | 14.000 | n. 186 · 19/12/2024 |
+| Napoli | 1,0 % | 12.000 | n. 143 · 29/12/2023 |
+| Bologna | 0,8 % | 15.000 | n. 354 · 22/12/2016 |
+| Firenze | 0,2 % | 25.000 | n. 47 · 28/07/2014 |
+| Bari | 0,8 % | 15.000 | n. 42 · 31/07/2012 |
+| Venezia | 0,8 % | 10.000 | n. 67 · 20/12/2023 |
+| Palermo | 1,014 % | — | n. 6 · 25/02/2025 |
 
 **Fonte:** elenco generale MEF, un CSV per anno d'imposta.
 
@@ -185,20 +210,24 @@ Servono ~15 righe in `SurtaxesCalculator` più i test. Lo schema è già pronto:
 accetta `kind = municipal_surtax` con `owner_id` sul comune, e `tax_municipalities.rate` è
 nullable proprio per questo.
 
-### Le 20 regioni: solo Lombardia
+### Le regioni: le 8 che servono ci sono, le altre 12 no
 
-**Lombardia** è verificata (1,23 · 1,58 · 1,72 · 1,73 %). Le altre 19 vanno prese a mano.
-
-Le sette regioni delle città seedate (Lazio, Campania, Emilia-Romagna, Toscana, Puglia, Veneto,
-Sicilia) esistono come righe con nome e fonte, **senza scaglioni**. L'assenza è il segnale:
-`TaxYearRepository` solleva `MissingTaxDataException` invece di leggerla come addizionale zero.
-
-Per le regionali **non esiste un CSV**: l'endpoint analogo a quello comunale risponde 200 ma
-restituisce zero byte per ogni anno provato. Resta la consultazione HTML:
+Lombardia, Lazio, Campania, Emilia-Romagna, Toscana, Puglia, Veneto e Sicilia hanno tutte gli
+scaglioni, presi dall'endpoint MEF regione per regione (non un CSV come per i comuni, una
+pagina HTML per regione):
 
 ```
-https://www1.finanze.gov.it/finanze2/dipartimentopolitichefiscali/fiscalitalocale/addregirpef/sceltaregione.htm
+https://www1.finanze.gov.it/finanze2/dipartimentopolitichefiscali/fiscalitalocale/addregirpef/addregirpef.php?reg=<id>
 ```
+
+L'elenco degli id sta in `sceltaregione.htm`. Sono le uniche 8 che servono: coprono tutte le
+città seedate. Piemonte e Liguria — che servirebbero a Torino e Genova — non sono state prese
+perché quelle due città sono fuori per un motivo diverso, vedi sopra: non è una regione mancante,
+è il motore che non gestisce ancora il comunale a scaglioni.
+
+Le altre 12 regioni (Abruzzo, Basilicata, Calabria, Friuli-Venezia Giulia, Liguria, Marche,
+Molise, Piemonte, Sardegna, Umbria, più le province di Trento e Bolzano) non hanno né regione né
+città seedate: mancano entrambe, non solo gli scaglioni.
 
 ### Perché non importiamo tutti i 7.897 comuni
 
@@ -222,9 +251,6 @@ v2 credibile: la fonte c'è, il percorso è noto, gli ostacoli sono misurati.
 
 - **Timezone e locale** sono ancora `UTC` e `en`: vanno su `Europe/Rome` e `it` prima di
   toccare le date.
-- **Le 20 costanti hanno `source_label` ma non `source_url`.** L'etichetta cita la norma
-  (circolare INPS, art. 13 TUIR, L. 199/2025…), il link no: meglio nessun URL che un URL
-  inventato. Vanno presi da Normattiva e dal sito INPS. Regioni e comuni il link ce l'hanno.
 - **I codici catastali degli 8 comuni non vengono dal CSV MEF**, li ho scritti io (F205, H501,
   D612…). La colonna è nullable e non la usa ancora nessuno — serve a un futuro importatore —
   ma vanno ricontrollati prima di farci affidamento.
