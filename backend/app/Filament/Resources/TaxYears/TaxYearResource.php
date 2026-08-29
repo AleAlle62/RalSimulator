@@ -5,6 +5,8 @@ namespace App\Filament\Resources\TaxYears;
 use App\Filament\Resources\TaxYears\Pages\CreateTaxYear;
 use App\Filament\Resources\TaxYears\Pages\EditTaxYear;
 use App\Filament\Resources\TaxYears\Pages\ListTaxYears;
+use App\Filament\Resources\TaxYears\RelationManagers\ConstantsRelationManager;
+use App\Filament\Resources\TaxYears\RelationManagers\RegionsRelationManager;
 use App\Models\TaxYear;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -98,7 +100,8 @@ class TaxYearResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            ConstantsRelationManager::class,
+            RegionsRelationManager::class,
         ];
     }
 
