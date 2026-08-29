@@ -11,11 +11,15 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed the application's database.
+     * The tax tables are not sample data: without them the calculator has nothing to compute
+     * with, so they are seeded in every environment. Places come second, they need the year.
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->call([
+            TaxYear2026Seeder::class,
+            TaxPlaces2026Seeder::class,
+        ]);
 
         User::factory()->create([
             'name' => 'Test User',

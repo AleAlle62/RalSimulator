@@ -65,9 +65,9 @@ TypeScript precedente, a sua volta verificata su 29 RAL.
 Il test più importante percorre i redditi da 1.000 a 300.000 € a passi di 100 e pretende che
 **ogni** calo del netto cada su una delle tre soglie note (8.500 · 15.000 · 23.000).
 
-### Database — schema creato, vuoto
+### Database — schema creato e popolato
 
-Sei tabelle migrate, nessun dato dentro:
+Sei tabelle migrate:
 
 | Tabella | Contiene |
 | --- | --- |
@@ -75,33 +75,55 @@ Sei tabelle migrate, nessun dato dentro:
 | `tax_regions` | nome regione + fonte (gli scaglioni stanno in `tax_brackets`) |
 | `tax_municipalities` | nome, provincia, codice catastale, aliquota, soglia esenzione, **delibera** e data |
 | `tax_brackets` | tutte le liste di scaglioni: `kind` + `owner_id` + `position` |
-| `tax_constants` | le 22 costanti, chiave/valore, con fonte |
+| `tax_constants` | le 20 costanti, chiave/valore, con fonte |
 | `simulations` | token, utente (null), input, `result` JSON come **snapshot** |
 
 `source_url` e `source_label` su brackets, constants, regions e municipalities.
+
+Le costanti sono **20 e non 22**: aliquota comunale e soglia di esenzione cambiano da comune a
+comune, quindi sono colonne di `tax_municipalities`, non costanti dell'anno.
+
+### Seeder e repository — completo, 8 test verdi
+
+```
+app/TaxTables/
+├── TaxConstantKey            le 20 chiavi ammesse
+├── BracketKind               irpef · wedge_cut_exempt_bonus · regional_surtax · municipal_surtax
+├── TaxYearRepository         righe → TaxYearConfig
+└── MissingTaxDataException   quando le tabelle non sanno rispondere
+```
+
+Sta fuori da `app/Domain/` di proposito: queste chiavi esistono solo perché lo storage è
+chiave/valore. È persistenza, non dominio — il motore non sa che le aliquote siano mai state righe.
+
+Sei modelli Eloquent in `app/Models/`, due seeder: `TaxYear2026Seeder` (anno, 20 costanti,
+scaglioni IRPEF e cuneo) e `TaxPlaces2026Seeder` (8 regioni, scaglioni Lombardia, 8 comuni).
+
+**Il seeder riscrive i valori a mano invece di leggerli da `TaxYear2026`.** La duplicazione è
+voluta: è partita doppia. Se il seeder copiasse dalla classe, i due coinciderebbero per
+costruzione e il test di confronto non potrebbe intercettare l'aliquota digitata male che
+esiste per intercettare.
+
+Verificato dal database: config identica a `TaxYear2026::config()`, e RAL 35.000 commercio
+14 mensilità → **25.967,22 €**, lo stesso numero dell'implementazione TypeScript.
+
+`TaxYear2026` ora è solo il riferimento nei test.
+
+**Il repository si rifiuta di rispondere** se manca un dato: anno non pubblicato, comune
+sconosciuto, costante assente, regione senza scaglioni, comune ad aliquote proprie. Ognuna di
+queste poteva essere uno zero di default — ed è esattamente il fallimento che il progetto vuole
+evitare, perché il risultato sembrerebbe uno stipendio, plausibile al centesimo e sbagliato.
 
 ---
 
 ## Da fare, in ordine
 
-### 1. Seeder e repository — il prossimo blocco
-
-- [ ] Enum PHP con le 22 chiavi ammesse di `tax_constants`
-- [ ] Modelli Eloquent per le sei tabelle
-- [ ] Seeder che versa i valori di `TaxYear2026` più le 10 città
-- [ ] `TaxYearRepository` che ricostruisce un `TaxYearConfig` leggendo dal DB
-- [ ] **Test di confronto**: la config dal database dev'essere identica a `TaxYear2026::config()`.
-      È quello che intercetta un'aliquota digitata male nel seeder.
-
-Dopo questo, `TaxYear2026` smette di essere la fonte di produzione e resta solo come
-riferimento nei test.
-
-### 2. Risorse Filament
+### 1. Risorse Filament
 
 - [ ] CRUD su `tax_years`, `tax_regions`, `tax_municipalities`, `tax_brackets`, `tax_constants`
 - [ ] Test: un utente senza `is_admin` non vede nulla
 
-### 3. API
+### 2. API
 
 - [ ] `POST /api/simulations` — calcola, salva, restituisce token e risultato
 - [ ] `GET /api/simulations/{token}` — legge lo snapshot
@@ -110,7 +132,7 @@ riferimento nei test.
 - [ ] Registrazione e login via Sanctum, cookie di sessione same-origin
 - [ ] FormRequest per validare l'input: **il motore non valida**, è compito del confine
 
-### 4. Frontend Quasar
+### 3. Frontend Quasar
 
 - [ ] Progetto Quasar CLI in `frontend/`, build dentro `backend/public`
 - [ ] Route catch-all in Laravel per servire la SPA
@@ -121,7 +143,7 @@ riferimento nei test.
 - [ ] "Riga per riga" con tabella per scaglione
 - [ ] "Le mie simulazioni" · pagina `/s/{token}` con meta OpenGraph
 
-### 5. Deploy
+### 4. Deploy
 
 - [ ] Scegliere l'host — criterio: **non deve dormire**. Laravel Cloud o Oracle Always Free
 - [ ] `sudo dnf install php-pgsql` se in produzione si va su Postgres
@@ -131,18 +153,22 @@ riferimento nei test.
 
 ## Dati fiscali: cosa c'è e cosa manca
 
-### Le 10 città, verificate sull'elenco MEF
+### Le 8 città seedate, verificate sull'elenco MEF
 
-| Città | Aliquota | Esenzione | Delibera |
-| --- | --- | --- | --- |
-| Milano | 0,8 % | 23.000 | n. 46 · 28/09/2020 |
-| Roma | 0,9 % | 14.000 | n. 186 · 19/12/2024 |
-| Napoli | 1,0 % | 12.000 | n. 143 · 29/12/2023 |
-| Bologna | 0,8 % | 15.000 | n. 354 · 22/12/2016 |
-| Firenze | 0,2 % | 25.000 | n. 47 · 28/07/2014 |
-| Bari | 0,8 % | 15.000 | n. 42 · 31/07/2012 |
-| Venezia | 0,8 % | 10.000 | n. 67 · 20/12/2023 |
-| Palermo | 1,014 % | — | n. 6 · 25/02/2025 |
+Tutte e otto sono in `tax_municipalities`, ma **solo Milano calcola**: le altre sette hanno
+l'aliquota comunale verificata e la regione senza scaglioni, e il repository si rifiuta di
+rispondere finché non ci sono. Sbloccarle è inserire dati, non scrivere codice.
+
+| Città | Aliquota | Esenzione | Delibera | Calcola |
+| --- | --- | --- | --- | --- |
+| Milano | 0,8 % | 23.000 | n. 46 · 28/09/2020 | sì |
+| Roma | 0,9 % | 14.000 | n. 186 · 19/12/2024 | manca Lazio |
+| Napoli | 1,0 % | 12.000 | n. 143 · 29/12/2023 | manca Campania |
+| Bologna | 0,8 % | 15.000 | n. 354 · 22/12/2016 | manca Emilia-Romagna |
+| Firenze | 0,2 % | 25.000 | n. 47 · 28/07/2014 | manca Toscana |
+| Bari | 0,8 % | 15.000 | n. 42 · 31/07/2012 | manca Puglia |
+| Venezia | 0,8 % | 10.000 | n. 67 · 20/12/2023 | manca Veneto |
+| Palermo | 1,014 % | — | n. 6 · 25/02/2025 | manca Sicilia |
 
 **Fonte:** elenco generale MEF, un CSV per anno d'imposta.
 
@@ -162,6 +188,10 @@ nullable proprio per questo.
 ### Le 20 regioni: solo Lombardia
 
 **Lombardia** è verificata (1,23 · 1,58 · 1,72 · 1,73 %). Le altre 19 vanno prese a mano.
+
+Le sette regioni delle città seedate (Lazio, Campania, Emilia-Romagna, Toscana, Puglia, Veneto,
+Sicilia) esistono come righe con nome e fonte, **senza scaglioni**. L'assenza è il segnale:
+`TaxYearRepository` solleva `MissingTaxDataException` invece di leggerla come addizionale zero.
 
 Per le regionali **non esiste un CSV**: l'endpoint analogo a quello comunale risponde 200 ma
 restituisce zero byte per ogni anno provato. Resta la consultazione HTML:
@@ -192,6 +222,12 @@ v2 credibile: la fonte c'è, il percorso è noto, gli ostacoli sono misurati.
 
 - **Timezone e locale** sono ancora `UTC` e `en`: vanno su `Europe/Rome` e `it` prima di
   toccare le date.
+- **Le 20 costanti hanno `source_label` ma non `source_url`.** L'etichetta cita la norma
+  (circolare INPS, art. 13 TUIR, L. 199/2025…), il link no: meglio nessun URL che un URL
+  inventato. Vanno presi da Normattiva e dal sito INPS. Regioni e comuni il link ce l'hanno.
+- **I codici catastali degli 8 comuni non vengono dal CSV MEF**, li ho scritti io (F205, H501,
+  D612…). La colonna è nullable e non la usa ancora nessuno — serve a un futuro importatore —
+  ma vanno ricontrollati prima di farci affidamento.
 - `backend/CLAUDE.md` e `backend/AGENTS.md` sono lo stub di Laravel che chiede di installare
   **Laravel Boost**. Deciso di installarlo ma non ancora fatto; se si rinuncia, vanno
   cancellati perché contengono istruzioni di setup che confondono ogni sessione.
