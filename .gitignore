@@ -5,6 +5,8 @@
 .idea
 *.sw?
 *.log
+.vite/
+node_modules/
 
 # La SPA compilata finisce dentro backend/public: è un artefatto di build,
 # si rigenera con `quasar build` e non va versionata.
