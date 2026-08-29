@@ -2,15 +2,12 @@
 
 namespace App\Domain;
 
-use App\Domain\Payslips\PayslipSchedule;
 use App\Domain\Payslips\PayslipsCalculator;
 use App\Domain\Payslips\PayslipsInput;
-use App\Domain\Tax\Contributions\Contributions;
 use App\Domain\Tax\Contributions\ContributionsCalculator;
 use App\Domain\Tax\Irpef\IrpefCalculator;
 use App\Domain\Tax\Reliefs\Reliefs;
 use App\Domain\Tax\Reliefs\ReliefsCalculator;
-use App\Domain\Tax\Surtaxes\Surtaxes;
 use App\Domain\Tax\Surtaxes\SurtaxesCalculator;
 use App\Domain\Tax\TaxYearConfig;
 
@@ -51,6 +48,17 @@ final readonly class SalaryCalculator
         $added = $reliefs->taxFreeAdditions();
         $net = $gross - $withheld + $added;
 
+        $payslips = $this->payslips->calculate(new PayslipsInput(
+            grossAnnualSalary: $gross,
+            monthlyPaymentsCount: $input->monthlyPaymentsCount,
+            netAnnualSalary: $net,
+            contributions: $contributions->total,
+            irpef: $netIrpef,
+            surtaxes: $surtaxes->total,
+            taxFreeAdditions: $added,
+            marginalRate: $this->irpef->marginalRate($taxableIncome, $config->irpefBrackets),
+        ));
+
         return new SalaryBreakdown(
             input: $input,
             year: $config->year,
@@ -64,7 +72,7 @@ final readonly class SalaryCalculator
             totalWithholdings: $withheld,
             taxFreeAdditions: $added,
             netAnnualSalary: $net,
-            payslips: $this->payslipsFor($input, $config, $contributions, $netIrpef, $surtaxes, $added, $net),
+            payslips: $payslips,
         );
     }
 
@@ -72,33 +80,5 @@ final readonly class SalaryCalculator
     private function netIrpef(float $grossIrpef, Reliefs $reliefs): float
     {
         return max(0, $grossIrpef - $reliefs->totalDeductedFromTax());
-    }
-
-    /**
-     * Splitting the year into payslips needs results, not rules, so everything handed over
-     * here is already computed. The marginal rate is the one exception, and only because the
-     * extra payslips are withheld at it.
-     */
-    private function payslipsFor(
-        SalaryInput $input,
-        TaxYearConfig $config,
-        Contributions $contributions,
-        float $netIrpef,
-        Surtaxes $surtaxes,
-        float $taxFreeAdditions,
-        float $netAnnualSalary,
-    ): PayslipSchedule {
-        $taxableIncome = $input->grossAnnualSalary - $contributions->total;
-
-        return $this->payslips->calculate(new PayslipsInput(
-            grossAnnualSalary: $input->grossAnnualSalary,
-            monthlyPaymentsCount: $input->monthlyPaymentsCount,
-            netAnnualSalary: $netAnnualSalary,
-            contributions: $contributions->total,
-            irpef: $netIrpef,
-            surtaxes: $surtaxes->total,
-            taxFreeAdditions: $taxFreeAdditions,
-            marginalRate: $this->irpef->marginalRate($taxableIncome, $config->irpefBrackets),
-        ));
     }
 }
