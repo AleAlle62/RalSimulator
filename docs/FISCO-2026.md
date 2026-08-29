@@ -177,8 +177,20 @@ Progressiva **a scaglioni**, come l'IRPEF.
 
 ### Comunale — Milano
 
-**Fonte:** Comune di Milano. La soglia di 23.000 € è in vigore dal 2020 e vale anche nel 2026,
-non essendo stata pubblicata una nuova delibera.
+**Fonte:** Comune di Milano, **delibera n. 46 del 28/09/2020**, tuttora in vigore e
+riconfermata il 20/12/2025.
+
+Verificata sull'**elenco generale MEF delle aliquote comunali**, che riporta testualmente
+*«Esenzione per redditi imponibili fino a euro 23.000,00»* più un'aliquota unica dello 0,8%.
+L'elenco è scaricabile in CSV, un file per anno d'imposta:
+
+```
+https://www1.finanze.gov.it/finanze2/dipartimentopolitichefiscali/fiscalitalocale/addirpef_newDF/download/download.php?anno=2026
+```
+
+⚠️ Il file dell'anno corrente è **parziale**: i comuni pubblicano le delibere durante l'anno.
+Ad agosto 2026, 4.809 comuni su 7.897 non hanno ancora una delibera 2026 e riportano `0*`,
+Milano compresa. Per quelli vale l'ultima delibera pubblicata — da cui la citazione al 2025.
 
 | Parametro | Valore |
 | --- | --- |

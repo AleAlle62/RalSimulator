@@ -11,6 +11,12 @@ fonti citate valgono più di qualsiasi cosa lato interfaccia.
 > Le linee guida di sviluppo (SOLID, naming, clean code, testing) arrivano dal `CLAUDE.md`
 > globale. Qui c'è solo ciò che è specifico di questo progetto.
 
+**Prima di lavorare, leggi [docs/STATO.md](docs/STATO.md):** dice a che punto siamo, cosa
+manca e da dove si riparte.
+
+**Come si lavora qui: un file alla volta.** Nome, posizione, cosa fa e perché in poche righe,
+poi si aspetta l'ok, poi si scrive. Vale anche per i file piccoli.
+
 ---
 
 ## Il prodotto

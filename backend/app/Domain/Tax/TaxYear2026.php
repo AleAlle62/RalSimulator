@@ -108,9 +108,14 @@ final class TaxYear2026
     }
 
     /**
-     * Sources: Regione Lombardia, addizionale regionale IRPEF, rates unchanged since 2022;
-     * Comune di Milano, whose 23.000 threshold has been in force since 2020 and still applies
-     * in 2026, no new delibera having been published. Stale calculators report it as 21.000.
+     * Sources: Regione Lombardia, addizionale regionale IRPEF, rates unchanged since 2022.
+     *
+     * Milano: delibera n. 46 del 28/09/2020, still in force and reconfirmed on 20/12/2025 —
+     * rate 0,8%, exempt up to 23.000 of taxable income. Verified against the MEF list of
+     * municipal rates, which reports it verbatim as "Esenzione per redditi imponibili fino a
+     * euro 23.000,00" plus a single rate of 0,8%. Stale calculators still report 21.000.
+     *
+     * https://www.finanze.gov.it/it/fiscalita/fiscalita-regionale-e-locale/Addizionale-comunale-allIRPEF/aliquote-applicabili/Elenchi-generali-aggiornati-quotidianamente/
      */
     private static function surtaxes(): SurtaxesConfig
     {
