@@ -5,7 +5,9 @@ namespace App\Filament\Resources\TaxYears;
 use App\Filament\Resources\TaxYears\Pages\CreateTaxYear;
 use App\Filament\Resources\TaxYears\Pages\EditTaxYear;
 use App\Filament\Resources\TaxYears\Pages\ListTaxYears;
+use App\Filament\Resources\TaxYears\RelationManagers\BracketsRelationManager;
 use App\Filament\Resources\TaxYears\RelationManagers\ConstantsRelationManager;
+use App\Filament\Resources\TaxYears\RelationManagers\MunicipalitiesRelationManager;
 use App\Filament\Resources\TaxYears\RelationManagers\RegionsRelationManager;
 use App\Models\TaxYear;
 use BackedEnum;
@@ -102,6 +104,8 @@ class TaxYearResource extends Resource
         return [
             ConstantsRelationManager::class,
             RegionsRelationManager::class,
+            MunicipalitiesRelationManager::class,
+            BracketsRelationManager::class,
         ];
     }
 

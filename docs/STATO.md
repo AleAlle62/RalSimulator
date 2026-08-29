@@ -143,16 +143,51 @@ cinque seguono le stesse tre soglie di IRPEF e Lombardia (15.000 · 28.000 · 50
 carico di Lazio, Campania e Sicilia — sono tutte agevolazioni legate a familiari a carico, già
 fuori scope per lo stesso motivo dichiarato in `CLAUDE.md`.
 
+### Risorse Filament — completo, 2 test in più
+
+Una risorsa sola, `TaxYearResource`, con le altre quattro tabelle come schede annidate nella
+pagina di modifica — non cinque voci di menu separate, perché tutte dipendono da un anno e
+questo lo rende esplicito invece di lasciarlo a un filtro:
+
+```
+app/Filament/Resources/TaxYears/
+├── TaxYearResource.php              anno, etichetta, pubblicato il, note
+└── RelationManagers/
+    ├── ConstantsRelationManager     le 20 costanti, chiave come select su TaxConstantKey
+    ├── RegionsRelationManager       le 8 regioni, badge di conteggio scaglioni/comuni
+    ├── MunicipalitiesRelationManager  gli 8 comuni, regione come select, non testo libero
+    └── BracketsRelationManager      tutte le fasce, `owner_id` compare solo se il tipo lo richiede
+```
+
+Locale e timezone erano ancora `en`/`UTC` — lo notava già questo file, sotto "cose da non
+dimenticare". Sistemato qui perché è la prima volta che tocca davvero l'interfaccia: si vedeva
+subito ("New anno fiscale" invece di "Nuovo"). Ora `it`/`Europe/Rome` in `.env`, `.env.example`
+e `config/app.php`.
+
+Tre decisioni non ovvie:
+
+- **La chiave di una costante non è testo libero.** È un select sui casi di `TaxConstantKey`,
+  come per il seeder: una chiave che il motore non conosce non può nemmeno essere digitata.
+- **La chiave di una costante non si modifica dopo la creazione.** Cambiarla equivarrebbe a
+  spostare un valore su un'altra costante — bloccato in form, non solo sconsigliato.
+- **La creazione resta aperta**, sia per le costanti che per le altre tabelle. `CLAUDE.md` dice
+  esplicitamente che aggiornare il 2027 dev'essere "un inserimento di dati, non un deploy":
+  bloccare la creazione avrebbe contraddetto il motivo per cui Filament esiste in questo
+  progetto.
+
+Verificato dal vivo nel browser, non solo nei test: login, le quattro schede, il campo
+`owner_id` degli scaglioni che compare solo per `regional_surtax`/`municipal_surtax` e si
+popola con le regioni giuste.
+
+Il test mancante nella checklist ("un utente senza `is_admin` non vede nulla") ora è concreto,
+non solo sul metodo `canAccessPanel()` isolato: un utente loggato non admin che chiede
+`/admin/tax-years` riceve 403, un admin 200. In `tests/Feature/AdminAccessTest.php`.
+
 ---
 
 ## Da fare, in ordine
 
-### 1. Risorse Filament
-
-- [ ] CRUD su `tax_years`, `tax_regions`, `tax_municipalities`, `tax_brackets`, `tax_constants`
-- [ ] Test: un utente senza `is_admin` non vede nulla
-
-### 2. API
+### 1. API
 
 - [ ] `POST /api/simulations` — calcola, salva, restituisce token e risultato
 - [ ] `GET /api/simulations/{token}` — legge lo snapshot
@@ -161,7 +196,7 @@ fuori scope per lo stesso motivo dichiarato in `CLAUDE.md`.
 - [ ] Registrazione e login via Sanctum, cookie di sessione same-origin
 - [ ] FormRequest per validare l'input: **il motore non valida**, è compito del confine
 
-### 3. Frontend Quasar
+### 2. Frontend Quasar
 
 - [ ] Progetto Quasar CLI in `frontend/`, build dentro `backend/public`
 - [ ] Route catch-all in Laravel per servire la SPA
@@ -172,7 +207,7 @@ fuori scope per lo stesso motivo dichiarato in `CLAUDE.md`.
 - [ ] "Riga per riga" con tabella per scaglione
 - [ ] "Le mie simulazioni" · pagina `/s/{token}` con meta OpenGraph
 
-### 4. Deploy
+### 3. Deploy
 
 - [ ] Scegliere l'host — criterio: **non deve dormire**. Laravel Cloud o Oracle Always Free
 - [ ] `sudo dnf install php-pgsql` se in produzione si va su Postgres
@@ -249,8 +284,6 @@ v2 credibile: la fonte c'è, il percorso è noto, gli ostacoli sono misurati.
 
 ## Cose da non dimenticare
 
-- **Timezone e locale** sono ancora `UTC` e `en`: vanno su `Europe/Rome` e `it` prima di
-  toccare le date.
 - **I codici catastali degli 8 comuni non vengono dal CSV MEF**, li ho scritti io (F205, H501,
   D612…). La colonna è nullable e non la usa ancora nessuno — serve a un futuro importatore —
   ma vanno ricontrollati prima di farci affidamento.

@@ -45,6 +45,8 @@ class RegionsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->modelLabel('regione')
+            ->pluralModelLabel('regioni')
             ->recordTitleAttribute('name')
             ->defaultSort('name')
             ->modifyQueryUsing(fn (Builder $query) => $query->withCount(['brackets', 'municipalities']))

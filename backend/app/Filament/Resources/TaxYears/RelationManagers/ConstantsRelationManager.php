@@ -53,6 +53,8 @@ class ConstantsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->modelLabel('costante')
+            ->pluralModelLabel('costanti')
             ->recordTitleAttribute('key')
             ->defaultSort('key')
             ->columns([

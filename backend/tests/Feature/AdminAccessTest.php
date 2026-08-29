@@ -43,3 +43,17 @@ it('refuses to grant admin rights through mass assignment', function () {
 it('redirects an anonymous visitor away from the panel', function () {
     $this->get('/admin')->assertRedirect();
 });
+
+it('keeps a logged in non-admin away from the tax tables', function () {
+    // canAccessPanel() being correct in isolation is not the same as it actually gating a
+    // route: this hits the tax years resource itself, the one screen decision #5 exists for.
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->get('/admin/tax-years')->assertForbidden();
+});
+
+it('lets an admin reach the tax tables', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)->get('/admin/tax-years')->assertSuccessful();
+});
