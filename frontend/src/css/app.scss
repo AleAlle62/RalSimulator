@@ -1,0 +1,131 @@
+// Design tokens and base styles.
+//
+// Typeface: Atkinson Hyperlegible Next, drawn by the Braille Institute so that characters stay
+// distinguishable for low-vision readers. Chosen because "leggibile" is one of the three brand
+// words in the README and because the product's whole claim is that anyone can read the
+// result, not only someone who reads payslips for a living.
+
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,200..800;1,200..800&display=swap');
+
+:root {
+  // Measured, not estimated. Against --ink: bone 16.78:1, muted 7.77:1, azure 9.05:1,
+  // amber 11.63:1, ink-on-azure 9.05:1. Against a glass panel sitting over Silk's brightest
+  // point: bone 13.80:1, muted 6.39:1. Azure-deep is 3.97:1, so it is decoration and large
+  // text only, never body copy.
+  --ink: #080c14;
+  --surface: #101724;
+  --surface-raised: #182132;
+  --bone: #e8eef7;
+  --muted: #96a4bc;
+  --azure: #7fb2ff;
+  --azure-deep: #3c6fc4;
+  --amber: #f0c070;
+
+  --hairline: rgba(232, 238, 247, 0.14);
+
+  // The glass system, in two depths. Panels are tinted this heavily on purpose: the theme is
+  // allowed to run behind content only because the tint keeps the contrast out of the realm of
+  // opinion.
+  //
+  // The deep tint exists because the theme now runs behind the wizard and the result too, where
+  // the content is a column of euro amounts someone has to verify. 93% ink puts those panels
+  // within a hair of the opaque surface they replaced, so the glass stays a treatment of the
+  // edges and the blur rather than a tax on the figures.
+  //
+  // Measured against the worst case that can actually occur: Silk's brightest pixel, sampled off
+  // the canvas rather than guessed, at rgb(42, 74, 134); the veil at its most transparent stop
+  // (0.56, at 45% height); and no credit taken for the blur, which can only average that peak
+  // down. On --glass-tint-deep that puts bone at 16.57:1, muted 7.67:1, azure 8.94:1, amber
+  // 11.48:1. On --glass-tint, 16.20 / 7.50 / 8.74 / 11.23.
+  --glass-tint: rgba(8, 12, 20, 0.82);
+  --glass-tint-deep: rgba(8, 12, 20, 0.93);
+  --glass-edge: rgba(232, 238, 247, 0.18);
+  --glass-blur: 18px;
+
+  // Fluid scale, ratio well above 1.25 between steps. The display max stays at 4.75rem:
+  // large enough to lead the page, short of the shouting range.
+  --step-display: clamp(2.5rem, 1.2rem + 5vw, 4.75rem);
+  --step-lead: clamp(1.125rem, 0.95rem + 0.75vw, 1.5rem);
+  --step-body: clamp(1rem, 0.95rem + 0.2vw, 1.0625rem);
+  --step-small: 0.9375rem;
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+
+  // Semantic, so no one has to invent a 9999 later.
+  --z-backdrop: 0;
+  --z-content: 10;
+  --z-header: 50;
+  --z-sticky: 100;
+  --z-modal: 400;
+  --z-toast: 500;
+}
+
+html,
+body,
+#q-app {
+  height: 100%;
+}
+
+body {
+  background: var(--ink);
+  color: var(--bone);
+  font-family: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif;
+  font-size: var(--step-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+// Every figure in this product sits in a column that has to line up with the one above it.
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/**
+ * The glass panels. `.glass` is chrome — header, landing, login. `.glass-panel` is the same
+ * treatment at the deep tint, for the screens where figures are read.
+ *
+ * The split is the whole point. The glass used to stop at the CTA, on the grounds that
+ * frosted glass behind a column of euro amounts costs legibility for decoration.
+ * That objection was about translucency, not about blur or edges, so the wizard and the result
+ * get the look at a tint deep enough that the objection no longer bites: the text sits on
+ * effectively opaque ink, and what shows through is the border and the refraction around it.
+ */
+.glass,
+.glass-panel {
+  border: 1px solid var(--glass-edge);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+}
+
+.glass {
+  background: var(--glass-tint);
+}
+
+.glass-panel {
+  background: var(--glass-tint-deep);
+}
+
+// Kept for the screens that are lists rather than readings: no blur, nothing to see through.
+.panel-solid {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+}
+
+// Focus has to stay visible on a dark surface, and the default Quasar ring does not read here.
+:focus-visible {
+  outline: 2px solid var(--azure);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

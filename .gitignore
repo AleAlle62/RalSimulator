@@ -1,39 +1,18 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+# Il backend e il frontend hanno ognuno il proprio .gitignore.
+# Qui sta solo ciò che riguarda la radice o entrambi.
 
-node_modules
 .DS_Store
-dist
-dist-ssr
-coverage
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
 .idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
 *.sw?
+*.log
+.vite/
+node_modules/
 
-*.tsbuildinfo
-
-.eslintcache
-
-# Cypress
-/cypress/videos/
-/cypress/screenshots/
-
-# Vitest
-__screenshots__/
-
-# Vite
-*.timestamp-*-*.mjs
+# La SPA compilata finisce dentro backend/public: è un artefatto di build,
+# si rigenera con `pnpm build` e non va versionata.
+# Non c'è collisione con Laravel: lì stanno index.php e gli asset di Filament
+# sotto css/filament, js/filament e fonts/filament; Quasar scrive index.html,
+# assets/ e icons/ — e solo quelli, vedi frontend/scripts/copy-to-laravel.mjs.
+backend/public/index.html
+backend/public/assets/
+backend/public/icons/

@@ -1,0 +1,25 @@
+// Brand colours, fed to Quasar so its components inherit them instead of the default blue.
+// Contrast ratios are verified, not estimated — see the table in app.scss.
+//
+// The palette answers the scene the product is used in: someone at a kitchen table late at
+// night, screen the only light in the room, trying to see what actually lands in the bank.
+// A near-black blue surface with an azure light in it, which also misses all three
+// anti-references in the README: the grey table, the SaaS gradient, and the navy-and-gold
+// fintech dashboard (this blue is cold and lit, not corporate navy, and the one warm accent is
+// spent on a single figure rather than on gilding).
+
+$primary: #7fb2ff; // azure, light enough to carry near-black text on a button
+$secondary: #3c6fc4; // deeper azure, decoration and large text only
+$accent: #f0c070; // spent once, on the figure the eye should land on
+
+$dark: #101724; // raised surface
+$dark-page: #080c14; // page
+
+$positive: #7fb2ff;
+$negative: #e08a7d;
+$info: #7fb2ff;
+$warning: #f0c070;
+
+// Numbers are the content of this product, so they align by default rather than on request.
+$typography-font-family:
+  'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif;
