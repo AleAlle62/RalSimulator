@@ -321,12 +321,20 @@ Palette virata al **blu** (era verde muschio): nero-blu, azzurro come primario, 
 speso sulla cifra su cui deve cadere l'occhio. Sfondo animato **Silk** al posto di Aurora (stesso
 `ogl`, nessuna dipendenza nuova).
 
-**Dove il vetro si ferma.** Il liquid glass sta su header, landing e login. Wizard, risultato e
-simulazioni salvate usano `.panel-solid`: superficie piena, niente sfocatura. È la stessa linea
-che `PRODOTTO.md` traccia alla CTA, applicata al tema — il vetro smerigliato dietro una colonna
-di importi costa contrasto proprio a chi quei numeri deve verificarli. Contrasti rimisurati sul
-blu, **inclusa la peggior condizione**, cioè testo su un pannello di vetro sopra il punto più
-chiaro di Silk: corpo 13,80:1, secondario 6,39:1.
+**Dove il vetro si ferma: da nessuna parte, dal 30/08/2026.** Prima stava su header, landing e
+login soltanto, e wizard, risultato e simulazioni salvate usavano `.panel-solid`. Ora il tema
+copre tutte le schermate — vedi `PRODOTTO.md`, sezione «Il tema non si ferma più alla CTA», per il
+perché il divieto è diventato una soglia di contrasto.
+
+Il vetro ha due profondità: `.glass` all'82% per la cronologia (header, landing, login),
+`.glass-panel` al 93% dove si leggono cifre. Contrasti rimisurati sul caso peggiore reale — pixel
+più chiaro del canvas Silk campionato **dal canvas** (`rgb(42, 74, 134)`), velo al punto più
+trasparente, nessuno sconto per la sfocatura: sul vetro profondo corpo **16,57:1**, secondario
+**7,67:1**, azzurro **8,94:1**, ambra **11,48:1**.
+
+`SilkBackdrop` prende una prop `fixed`. Silk dimensiona il canvas su `offsetHeight` del
+contenitore: su una pagina che scrolla, un backdrop `inset: 0` renderebbe una superficie WebGL
+alta quanto tutto il documento e la porterebbe via con lo scroll.
 
 Il vetro è **CSS** (`backdrop-filter`), non il componente `GlassSurface` di Vue Bits. Quel
 componente ottiene la rifrazione con filtri SVG che funzionano **solo su Chromium** — ha lui
@@ -348,8 +356,14 @@ snapshot che torna. Verificato dal browser sul flusso reale: 35.000 commercio 14
 Milano → netto **25.967,22 €**, busta **1.910,42 €**, tredicesima **1.521,07 €**, gli stessi
 numeri che asserisce il backend.
 
-Il 3D del login è three.js (~600 KB, costo accettato consapevolmente): un ottaedro di vetro che
-gira e segue il puntatore.
+Il 3D del login è three.js (~600 KB, costo accettato consapevolmente): un **simbolo dell'euro** di
+vetro che oscilla e segue il puntatore (`GlassEuro.vue`, prima era un ottaedro). Il glifo è
+costruito da primitive — un settore di corona circolare per la C, due rettangoli per le barre —
+non estruso da un font: niente asset da caricare e niente questione di licenza sugli outline. Le
+tre solide si intersecano di proposito: `ExtrudeGeometry` non fa unione booleana, e in un
+materiale con `transmission` quelle superfici interne rifrangono, il che lo fa leggere come un
+oggetto di vetro sfaccettato invece che come un adesivo. La rotazione oscilla entro ±0,5 rad
+invece di girare: un'estrusione vista di taglio smette di essere un euro.
 
 **Tre bug trovati testando davvero, non solo compilando:**
 
@@ -365,6 +379,13 @@ gira e segue il puntatore.
    `GET /api/tax-years/{year}/municipalities` — il passo "luogo" non aveva da dove prendere i
    comuni. Il secondo elenca **solo i comuni che calcolano davvero**: offrirne uno la cui regione
    non ha scaglioni sarebbe un vicolo cieco presentato come una scelta.
+4. **La tabella "riga per riga" non era una tabella.** `BreakdownRow` chiamava il suo blocco
+   `.row`, che è l'utility flexbox globale di Quasar: il `<tr>` ereditava `display: flex` e
+   l'intera tabella usciva dal table formatting context. Ogni riga dimensionava per conto suo
+   etichetta e importo, e la colonna delle cifre veniva fuori sfrangiata — su un prodotto che
+   chiede di confrontare importi in colonna. Bloccato per un anno in bella vista, visibile solo
+   guardando la pagina. Il blocco ora si chiama `.line`, e il `<th>` è tornato una cella vera con
+   il flex spostato dentro (anche lì `display: flex` su una cella la toglieva dalla tabella).
 
 ### 2. Deploy
 

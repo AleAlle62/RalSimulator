@@ -1,33 +1,52 @@
 <template>
-  <div class="result">
-    <div class="result__shell">
+  <main class="result">
+    <SilkBackdrop fixed />
+
+    <div class="result__content">
       <AppHeader />
 
       <template v-if="breakdown">
-        <section class="result__headline panel-solid" aria-labelledby="net-heading">
-          <h1 id="net-heading" class="result__heading">
-            Su {{ formatEuro(breakdown.grossAnnualSalary) }} lordi, ti restano
-          </h1>
-          <p class="result__net tabular">{{ formatEuro(breakdown.netAnnualSalary) }}</p>
-          <p class="result__per-month">
-            all'anno, cioè
-            <strong class="tabular">{{ formatEuro(breakdown.payslips.ordinary.net) }}</strong>
-            in una busta ordinaria
-            <span class="result__muted">
-              ({{ simulation?.municipality }}, {{ sectorLabel }},
-              {{ breakdown.input.monthlyPaymentsCount }} mensilità)
+        <section class="hero glass-panel" aria-labelledby="net-heading">
+          <p class="hero__context">
+            Su <strong class="tabular">{{ formatEuro(breakdown.grossAnnualSalary) }}</strong> lordi
+            <span class="hero__where">
+              · {{ simulation?.municipality }} · {{ sectorLabel }} ·
+              {{ breakdown.input.monthlyPaymentsCount }} mensilità
             </span>
           </p>
+
+          <h1 id="net-heading" class="hero__heading">Ti restano</h1>
+          <p class="hero__net tabular">{{ formatEuro(breakdown.netAnnualSalary) }}</p>
+          <p class="hero__unit">netti all'anno</p>
+
+          <dl class="hero__stats">
+            <div class="stat">
+              <dt class="stat__label">In una busta ordinaria</dt>
+              <dd class="stat__value tabular">
+                {{ formatEuro(breakdown.payslips.ordinary.net) }}
+              </dd>
+            </div>
+            <div class="stat">
+              <dt class="stat__label">Trattenute in un anno</dt>
+              <dd class="stat__value tabular">
+                {{ formatEuro(breakdown.totalWithholdings) }}
+              </dd>
+            </div>
+          </dl>
         </section>
 
-        <section class="result__split panel-solid" aria-labelledby="split-heading">
-          <h2 id="split-heading" class="result__h2">Dove finisce il lordo</h2>
+        <section class="split glass-panel" aria-labelledby="split-heading">
+          <h2 id="split-heading" class="section__title">Dove finisce il lordo</h2>
+          <p class="section__note">
+            La barra divide la RAL e nient'altro: le quattro voci sommano esattamente
+            {{ formatEuro(breakdown.grossAnnualSalary) }}.
+          </p>
 
-          <div class="split" role="img" :aria-label="splitDescription">
+          <div class="bar" role="img" :aria-label="splitDescription">
             <span
               v-for="slice in slices"
               :key="slice.label"
-              class="split__slice"
+              class="bar__slice"
               :style="{ width: `${slice.share * 100}%`, background: slice.color }"
             />
           </div>
@@ -40,78 +59,30 @@
                 aria-hidden="true"
               />
               <span class="legend__label">{{ slice.label }}</span>
+              <span class="legend__share tabular">{{ formatPercent(slice.share) }}</span>
               <span class="legend__amount tabular">{{ formatEuro(slice.amount) }}</span>
             </li>
           </ul>
 
-          <p v-if="breakdown.taxFreeAdditions > 0" class="result__exempt">
-            A questo si <strong>aggiungono</strong>
-            <strong class="tabular">{{ formatEuro(breakdown.taxFreeAdditions) }}</strong>
-            di somme esenti, che non escono dal lordo: per questo il netto non è semplicemente una
-            fetta della barra qui sopra.
+          <p v-if="breakdown.taxFreeAdditions > 0" class="split__exempt">
+            <span class="split__operator" aria-hidden="true">+</span>
+            <span>
+              A questo si <strong>aggiungono</strong>
+              <strong class="tabular">{{ formatEuro(breakdown.taxFreeAdditions) }}</strong>
+              di somme esenti, che non escono dal lordo: per questo il netto non è semplicemente una
+              fetta della barra qui sopra.
+            </span>
           </p>
         </section>
 
-        <section class="result__detail panel-solid" aria-labelledby="detail-heading">
-          <h2 id="detail-heading" class="result__h2">Riga per riga</h2>
-
-          <table class="detail">
-            <caption class="result__sr">
-              Dal lordo annuo al netto annuo, una trattenuta per riga
-            </caption>
-            <tbody>
-              <BreakdownRow label="RAL lorda" :amount="breakdown.grossAnnualSalary" sign="none" />
-              <BreakdownRow
-                label="Contributi INPS"
-                :amount="breakdown.contributions.total"
-                sign="minus"
-                :note="`${formatPercent(breakdown.contributions.baseRate)} sulla base contributiva`"
-              />
-              <BreakdownRow
-                label="IRPEF netta"
-                :amount="breakdown.netIrpef"
-                sign="minus"
-                :note="`Lorda ${formatEuro(breakdown.grossIrpef)}, meno ${formatEuro(reliefsFromTax)} di detrazioni`"
-              />
-              <BreakdownRow
-                label="Addizionale regionale"
-                :amount="breakdown.surtaxes.regional"
-                sign="minus"
-                :note="simulation?.region ?? undefined"
-              />
-              <BreakdownRow
-                label="Addizionale comunale"
-                :amount="breakdown.surtaxes.municipal"
-                sign="minus"
-                :note="simulation?.municipality ?? undefined"
-              />
-              <BreakdownRow
-                v-if="breakdown.reliefs.exemptWedgeCutBonus > 0"
-                label="Somma esente, taglio del cuneo"
-                :amount="breakdown.reliefs.exemptWedgeCutBonus"
-                sign="plus"
-                note="Non è una detrazione: arriva in busta e non viene tassata"
-              />
-              <BreakdownRow
-                v-if="breakdown.reliefs.supplementaryAllowance > 0"
-                label="Trattamento integrativo"
-                :amount="breakdown.reliefs.supplementaryAllowance"
-                sign="plus"
-                note="Anche questo si aggiunge al netto, non abbatte l'imposta"
-              />
-              <BreakdownRow label="Netto annuo" :amount="breakdown.netAnnualSalary" sign="equals" />
-            </tbody>
-          </table>
-        </section>
-
-        <section class="result__payslips panel-solid" aria-labelledby="payslips-heading">
-          <h2 id="payslips-heading" class="result__h2">Le buste</h2>
-          <p class="result__note">
+        <section class="payslips glass-panel" aria-labelledby="payslips-heading">
+          <h2 id="payslips-heading" class="section__title">Le buste</h2>
+          <p class="section__note">
             Le mensilità aggiuntive rendono meno di una ordinaria a parità di lordo: non portano
             detrazioni né addizionali, che sono già state applicate sulle buste ordinarie.
           </p>
 
-          <div class="payslips">
+          <div class="payslips__grid">
             <article
               v-for="slip in allPayslips"
               :key="slip.kind"
@@ -125,16 +96,87 @@
           </div>
         </section>
 
-        <section class="result__assumptions">
-          <h2 class="result__h2">Cosa non è compreso</h2>
-          <p class="result__note">
+        <q-expansion-item
+          dark
+          class="detail glass-panel"
+          header-class="detail__header"
+          label="Riga per riga"
+          caption="Ogni trattenuta con il suo importo, dal lordo al netto"
+          icon="receipt_long"
+        >
+          <div class="detail__body">
+            <table class="detail__table">
+              <caption class="sr-only">
+                Dal lordo annuo al netto annuo, una trattenuta per riga
+              </caption>
+              <tbody>
+                <BreakdownRow label="RAL lorda" :amount="breakdown.grossAnnualSalary" sign="none" />
+                <BreakdownRow
+                  label="Contributi INPS"
+                  :amount="breakdown.contributions.total"
+                  sign="minus"
+                  :note="`${formatPercent(breakdown.contributions.baseRate)} sulla base contributiva`"
+                />
+                <BreakdownRow
+                  label="IRPEF netta"
+                  :amount="breakdown.netIrpef"
+                  sign="minus"
+                  :note="`Lorda ${formatEuro(breakdown.grossIrpef)}, meno ${formatEuro(reliefsFromTax)} di detrazioni`"
+                />
+                <BreakdownRow
+                  label="Addizionale regionale"
+                  :amount="breakdown.surtaxes.regional"
+                  sign="minus"
+                  :note="simulation?.region ?? undefined"
+                />
+                <BreakdownRow
+                  label="Addizionale comunale"
+                  :amount="breakdown.surtaxes.municipal"
+                  sign="minus"
+                  :note="simulation?.municipality ?? undefined"
+                />
+                <BreakdownRow
+                  v-if="breakdown.reliefs.exemptWedgeCutBonus > 0"
+                  label="Somma esente, taglio del cuneo"
+                  :amount="breakdown.reliefs.exemptWedgeCutBonus"
+                  sign="plus"
+                  note="Non è una detrazione: arriva in busta e non viene tassata"
+                />
+                <BreakdownRow
+                  v-if="breakdown.reliefs.supplementaryAllowance > 0"
+                  label="Trattamento integrativo"
+                  :amount="breakdown.reliefs.supplementaryAllowance"
+                  sign="plus"
+                  note="Anche questo si aggiunge al netto, non abbatte l'imposta"
+                />
+                <BreakdownRow
+                  label="Netto annuo"
+                  :amount="breakdown.netAnnualSalary"
+                  sign="equals"
+                />
+              </tbody>
+            </table>
+          </div>
+        </q-expansion-item>
+
+        <section class="assumptions">
+          <h2 class="section__title">Cosa non è compreso</h2>
+          <p class="section__note">
             Lavoro dipendente, nessun familiare a carico, nessun onere detraibile, nessun TFR. Il
             costo per l'azienda non è calcolato: qui c'è solo la quota a tuo carico. Non sostituisce
             il conteggio di un consulente del lavoro.
           </p>
 
-          <div class="result__actions">
-            <q-btn flat no-caps dark color="primary" label="Rifai il calcolo" to="/simulazione" />
+          <div class="assumptions__actions">
+            <q-btn
+              unelevated
+              no-caps
+              color="primary"
+              text-color="dark"
+              class="assumptions__cta"
+              label="Rifai il calcolo"
+              to="/simulazione"
+            />
             <q-btn
               flat
               no-caps
@@ -147,10 +189,10 @@
         </section>
       </template>
 
-      <p v-else-if="failure" class="result__failure panel-solid" role="alert">{{ failure }}</p>
+      <p v-else-if="failure" class="result__failure glass-panel" role="alert">{{ failure }}</p>
       <p v-else class="result__loading">Carico la simulazione…</p>
     </div>
-  </div>
+  </main>
 </template>
 
 <script setup lang="ts">
@@ -158,20 +200,24 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import BreakdownRow from '@/components/BreakdownRow.vue';
+import SilkBackdrop from '@/components/SilkBackdrop.vue';
 import { useCurrency } from '@/composables/useCurrency';
 import { useSimulationStore } from '@/stores/simulation';
 import type { PayslipKind } from '@/types/simulation';
 
 /**
- * The screen the reviewer checks and the screen the employee learns from, which is why every
- * total here is followed by the lines that produce it (docs/PRODOTTO.md, principle 1).
+ * The screen the reviewer checks and the screen the employee learns from.
  *
- * Solid panels throughout, no glass: figures are read here.
+ * The order answers the employee's questions first — how much, how much a month, where the rest
+ * went — and puts the reviewer's line-by-line audit behind a disclosure. That is the progressive
+ * disclosure docs/PRODOTTO.md asks for, not a retreat from principle 1: the split and its legend
+ * are on screen unopened, so no total is ever shown without its decomposition.
  *
  * The one thing this page must not get wrong is the exempt sums. They are not a slice of the
  * gross, they are added to the net, so the bar divides the RAL only and they are stated
- * separately underneath. Folding them into "resta a te" would make the bar promise more than
- * the whole.
+ * separately underneath with a `+`. Folding them into "resta a te" would make the bar promise
+ * more than the whole — which is also why the legend shows a share for the four slices and never
+ * one for the exempt line.
  */
 
 const route = useRoute();
@@ -262,133 +308,194 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 .result {
+  position: relative;
   min-height: 100dvh;
-  background: var(--ink);
-  padding: clamp(1rem, 3vh, 2rem) 1.25rem clamp(2rem, 6vh, 4rem);
+  display: flex;
 }
 
-.result__shell {
-  width: min(52rem, 100%);
+.result__content {
+  position: relative;
+  z-index: var(--z-content);
+  width: min(52rem, 100% - 2.5rem);
   margin-inline: auto;
+  padding-block: clamp(1rem, 3vh, 2rem) clamp(2rem, 6vh, 4rem);
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.result__headline,
-.result__split,
-.result__detail,
-.result__payslips {
-  border-radius: 14px;
-  padding: clamp(1.1rem, 3vw, 1.75rem);
+.hero,
+.split,
+.payslips,
+.detail,
+.result__failure {
+  border-radius: 16px;
 }
 
-.result__heading {
+.hero,
+.split,
+.payslips {
+  padding: clamp(1.25rem, 3.5vw, 2rem);
+}
+
+/* The headline block. One figure is allowed to be loud here; everything under it is quiet, which
+   is what keeps this from becoming the SaaS hero docs/PRODOTTO.md lists as an anti-reference. */
+.hero__context {
   margin: 0;
+  color: var(--muted);
+  font-size: var(--step-small);
+
+  strong {
+    color: var(--bone);
+    font-weight: 700;
+  }
+}
+
+.hero__where {
+  white-space: nowrap;
+}
+
+.hero__heading {
+  margin: 0.9rem 0 0;
   font-size: var(--step-body);
   font-weight: 400;
   color: var(--muted);
 }
 
-.result__net {
-  margin: 0.25rem 0 0;
-  font-size: clamp(2.25rem, 1.5rem + 4vw, 3.5rem);
-  line-height: 1.05;
-  letter-spacing: -0.02em;
+.hero__net {
+  margin: 0.1rem 0 0;
+  font-size: clamp(2.5rem, 1.4rem + 5.5vw, 4.25rem);
+  line-height: 1;
+  letter-spacing: -0.025em;
   font-weight: 700;
   color: var(--amber);
 }
 
-.result__per-month {
-  margin: 0.5rem 0 0;
-  color: var(--bone);
-}
-
-.result__muted {
+.hero__unit {
+  margin: 0.35rem 0 0;
   color: var(--muted);
+  font-size: var(--step-small);
 }
 
-.result__h2 {
-  margin: 0 0 0.75rem;
+.hero__stats {
+  margin: clamp(1.25rem, 3vw, 1.75rem) 0 0;
+  padding-top: clamp(1rem, 3vw, 1.5rem);
+  border-top: 1px solid var(--hairline);
+  display: grid;
+  gap: 1rem 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.stat__label {
+  color: var(--muted);
+  font-size: var(--step-small);
+}
+
+.stat__value {
+  margin: 0.15rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.section__title {
+  margin: 0 0 0.4rem;
   font-size: 1.125rem;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 
-.result__note {
-  margin: 0 0 1rem;
+.section__note {
+  margin: 0 0 1.25rem;
   color: var(--muted);
   font-size: var(--step-small);
   max-width: 62ch;
   text-wrap: pretty;
 }
 
-.result__exempt {
-  margin: 1rem 0 0;
-  font-size: var(--step-small);
-  color: var(--bone);
-  max-width: 62ch;
-}
-
-.split {
+/* Twice the old height. At 14px the four slices read as a rule under the heading; at 28px the
+   proportion is the thing you see first, which is the whole job of this section. */
+.bar {
   display: flex;
-  height: 14px;
+  height: 28px;
   border-radius: 999px;
   overflow: hidden;
   gap: 2px;
 }
 
-.split__slice {
+.bar__slice {
   height: 100%;
 }
 
 .legend {
   list-style: none;
-  margin: 0.9rem 0 0;
+  margin: 1.1rem 0 0;
   padding: 0;
   display: grid;
-  gap: 0.4rem 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.15rem;
 }
 
+/* A four-column grid rather than four flex rows: the shares line up under each other and the
+   amounts end on the same right edge, so the column can be read down instead of item by item. */
 .legend__item {
-  display: flex;
+  display: grid;
+  grid-template-columns: 0.7rem 1fr auto auto;
   align-items: baseline;
-  gap: 0.5rem;
+  gap: 0.65rem;
   font-size: var(--step-small);
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--hairline);
+
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
 .legend__swatch {
   width: 0.7rem;
   height: 0.7rem;
   border-radius: 3px;
-  flex: none;
 }
 
 .legend__label {
   color: var(--bone);
 }
 
-.legend__amount {
-  margin-left: auto;
+.legend__share {
   color: var(--muted);
+  min-width: 4.5rem;
+  text-align: right;
 }
 
-.detail {
-  width: 100%;
-  border-collapse: collapse;
+.legend__amount {
+  color: var(--bone);
+  min-width: 7rem;
+  text-align: right;
 }
 
-.result__sr {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
+.split__exempt {
+  margin: 1.25rem 0 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: rgba(127, 178, 255, 0.06);
+  font-size: var(--step-small);
+  color: var(--bone);
+  display: flex;
+  gap: 0.7rem;
+  align-items: baseline;
+  text-wrap: pretty;
 }
 
-.payslips {
+.split__operator {
+  color: var(--azure);
+  font-weight: 700;
+  font-size: 1.25rem;
+  line-height: 1;
+  flex: none;
+}
+
+.payslips__grid {
   display: grid;
   gap: 0.75rem;
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
@@ -397,8 +504,14 @@ onMounted(async () => {
 .payslip {
   background: var(--surface-raised);
   border: 1px solid var(--hairline);
-  border-radius: 10px;
-  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+}
+
+/* The extras are the point of this section, so they are marked rather than left to be inferred
+   from the label alone. */
+.payslip--extra {
+  border-left: 3px solid var(--azure-deep);
 }
 
 .payslip__kind {
@@ -420,19 +533,64 @@ onMounted(async () => {
   color: var(--muted);
 }
 
-.result__assumptions {
-  padding: 0 clamp(0.25rem, 2vw, 0.5rem);
+.detail {
+  overflow: hidden;
+
+  :deep(.detail__header) {
+    padding: clamp(0.9rem, 3vw, 1.25rem) clamp(1.25rem, 3.5vw, 2rem);
+  }
+
+  :deep(.q-item__label) {
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  :deep(.q-item__label--caption) {
+    font-size: var(--step-small);
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--muted);
+  }
 }
 
-.result__actions {
+.detail__body {
+  padding: 0 clamp(1.25rem, 3.5vw, 2rem) clamp(1rem, 3vw, 1.5rem);
+}
+
+.detail__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.assumptions {
+  padding: 0.5rem clamp(0.25rem, 2vw, 0.5rem) 0;
+}
+
+.assumptions__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.assumptions__cta {
+  font-weight: 700;
+  padding: 0.6rem 1.5rem;
+  border-radius: 10px;
 }
 
 .result__failure,
 .result__loading {
-  border-radius: 14px;
   padding: 1.5rem;
   color: var(--muted);
 }

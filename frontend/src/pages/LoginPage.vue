@@ -77,7 +77,7 @@
         </section>
 
         <aside v-if="wideEnough" class="login__visual">
-          <GlassPrism />
+          <GlassEuro />
         </aside>
       </div>
     </div>
@@ -88,13 +88,13 @@
 import { onUnmounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
-import GlassPrism from '@/components/GlassPrism.vue';
+import GlassEuro from '@/components/GlassEuro.vue';
 import SilkBackdrop from '@/components/SilkBackdrop.vue';
 import { ApiError } from '@/services/api';
 import { useAuthStore } from '@/stores/auth';
 
 /**
- * Sign in on the left, a turning glass solid on the right.
+ * Sign in on the left, a turning glass euro sign on the right.
  *
  * This is chrome, not a screen where figures are read, so it keeps the landing's treatment:
  * Silk behind, a glass panel over it. Field errors come from Laravel's validation bag rather

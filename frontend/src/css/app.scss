@@ -23,11 +23,22 @@
 
   --hairline: rgba(232, 238, 247, 0.14);
 
-  // The glass system. Panels are tinted this heavily on purpose: at 82% ink over Silk's
-  // brightest point the body text still measures 13.80:1, which is what lets the theme run
-  // behind content without the contrast becoming a matter of opinion.
+  // The glass system, in two depths. Panels are tinted this heavily on purpose: the theme is
+  // allowed to run behind content only because the tint keeps the contrast out of the realm of
+  // opinion.
+  //
+  // The deep tint exists because the theme now runs behind the wizard and the result too, where
+  // the content is a column of euro amounts someone has to verify. 93% ink puts those panels
+  // within a hair of the opaque surface they replaced, so the glass stays a treatment of the
+  // edges and the blur rather than a tax on the figures.
+  //
+  // Measured against the worst case that can actually occur: Silk's brightest pixel, sampled off
+  // the canvas rather than guessed, at rgb(42, 74, 134); the veil at its most transparent stop
+  // (0.56, at 45% height); and no credit taken for the blur, which can only average that peak
+  // down. On --glass-tint-deep that puts bone at 16.57:1, muted 7.67:1, azure 8.94:1, amber
+  // 11.48:1. On --glass-tint, 16.20 / 7.50 / 8.74 / 11.23.
   --glass-tint: rgba(8, 12, 20, 0.82);
-  --glass-tint-light: rgba(8, 12, 20, 0.6);
+  --glass-tint-deep: rgba(8, 12, 20, 0.93);
   --glass-edge: rgba(232, 238, 247, 0.18);
   --glass-blur: 18px;
 
@@ -71,21 +82,31 @@ body {
 }
 
 /**
- * The glass panel, used for chrome only: header, landing, login.
+ * The glass panels. `.glass` is chrome — header, landing, login. `.glass-panel` is the same
+ * treatment at the deep tint, for the screens where figures are read.
  *
- * Deliberately absent from anywhere figures are read. docs/PRODOTTO.md draws that line, and the
- * reason is practical rather than stylistic: the reviewer this product is built for checks the
- * numbers, and frosted glass behind a column of euro amounts costs legibility for decoration.
- * Panels that carry amounts use .panel-solid instead.
+ * The split is the whole point. docs/PRODOTTO.md used to stop the glass at the CTA, on the
+ * grounds that frosted glass behind a column of euro amounts costs legibility for decoration.
+ * That objection was about translucency, not about blur or edges, so the wizard and the result
+ * get the look at a tint deep enough that the objection no longer bites: the text sits on
+ * effectively opaque ink, and what shows through is the border and the refraction around it.
  */
-.glass {
-  background: var(--glass-tint);
+.glass,
+.glass-panel {
   border: 1px solid var(--glass-edge);
   backdrop-filter: blur(var(--glass-blur)) saturate(140%);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
 }
 
-// Where the numbers live. No blur, no translucency, nothing behind it to see through.
+.glass {
+  background: var(--glass-tint);
+}
+
+.glass-panel {
+  background: var(--glass-tint-deep);
+}
+
+// Kept for the screens that are lists rather than readings: no blur, nothing to see through.
 .panel-solid {
   background: var(--surface);
   border: 1px solid var(--hairline);

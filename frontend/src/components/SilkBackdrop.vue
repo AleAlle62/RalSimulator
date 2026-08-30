@@ -1,5 +1,5 @@
 <template>
-  <div class="backdrop" aria-hidden="true">
+  <div class="backdrop" :class="{ 'backdrop--fixed': fixed }" aria-hidden="true">
     <Silk
       v-if="animate"
       :speed="3"
@@ -18,7 +18,7 @@ import { onUnmounted, ref } from 'vue';
 import Silk from '@/components/vendor/Silk.vue';
 
 /**
- * The animated backdrop for the product's chrome: landing and login.
+ * The animated backdrop, behind every screen of the product.
  *
  * Two things this wrapper owns that the vendored component does not:
  *
@@ -29,6 +29,16 @@ import Silk from '@/components/vendor/Silk.vue';
  *    to have the setting turned on.
  * 2. The palette and the veil, kept here so the vendored file stays verbatim and re-syncable.
  */
+
+/**
+ * Anchor the backdrop to the viewport instead of to the page.
+ *
+ * Silk sizes its canvas from the container's offsetHeight, so on a screen that scrolls an
+ * `inset: 0` backdrop would render a WebGL surface as tall as the whole document — thousands of
+ * pixels on the result page — and then scroll away with the content. Fixed keeps it one screen
+ * big and lets the content slide over it. Landing and login do not scroll and do not need it.
+ */
+withDefaults(defineProps<{ fixed?: boolean }>(), { fixed: false });
 
 const color = '#2a4a86';
 
@@ -50,6 +60,10 @@ onUnmounted(() => query.removeEventListener('change', onChange));
   z-index: var(--z-backdrop);
   overflow: hidden;
   background: var(--ink);
+}
+
+.backdrop--fixed {
+  position: fixed;
 }
 
 /* What reduced-motion readers get: the same composition, holding still. */

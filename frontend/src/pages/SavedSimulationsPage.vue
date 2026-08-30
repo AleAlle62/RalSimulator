@@ -1,5 +1,7 @@
 <template>
-  <div class="saved">
+  <main class="saved">
+    <SilkBackdrop fixed />
+
     <div class="saved__shell">
       <AppHeader />
 
@@ -7,12 +9,12 @@
 
       <p v-if="loading" class="saved__note">Carico…</p>
 
-      <p v-else-if="!auth.isAuthenticated" class="saved__note panel-solid">
+      <p v-else-if="!auth.isAuthenticated" class="saved__signin glass-panel">
         Serve un account per ritrovare le simulazioni salvate.
         <router-link to="/accedi" class="saved__link">Accedi</router-link>
       </p>
 
-      <div v-else-if="simulations.length === 0" class="saved__empty panel-solid">
+      <div v-else-if="simulations.length === 0" class="saved__empty glass-panel">
         <p class="saved__note">
           Non hai ancora salvato niente. Ogni calcolo che fai da qui in avanti finisce in questo
           elenco.
@@ -28,7 +30,7 @@
       </div>
 
       <ul v-else class="saved__list">
-        <li v-for="item in simulations" :key="item.id" class="saved__item panel-solid">
+        <li v-for="item in simulations" :key="item.id" class="saved__item glass-panel">
           <router-link :to="`/risultato/${item.token}`" class="saved__main">
             <span class="saved__net tabular">{{ formatEuro(item.result.netAnnualSalary) }}</span>
             <span class="saved__meta">
@@ -51,19 +53,20 @@
         </li>
       </ul>
     </div>
-  </div>
+  </main>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import AppHeader from '@/components/AppHeader.vue';
+import SilkBackdrop from '@/components/SilkBackdrop.vue';
 import { useCurrency } from '@/composables/useCurrency';
 import { useAuthStore } from '@/stores/auth';
 import { useSimulationStore } from '@/stores/simulation';
 import type { Simulation } from '@/types/simulation';
 
 /**
- * The signed-in user's saved simulations. Solid panels, no glass: these are figures.
+ * The signed-in user's saved simulations, in the same glass as the wizard and the result.
  *
  * Deleting asks twice, on the button itself rather than in a dialog. The row is small and the
  * action is irreversible, so a second deliberate click is proportionate where a modal would be
@@ -111,14 +114,17 @@ onMounted(load);
 
 <style scoped lang="scss">
 .saved {
+  position: relative;
   min-height: 100dvh;
-  background: var(--ink);
-  padding: clamp(1rem, 3vh, 2rem) 1.25rem clamp(2rem, 6vh, 4rem);
+  display: flex;
 }
 
 .saved__shell {
-  width: min(48rem, 100%);
+  position: relative;
+  z-index: var(--z-content);
+  width: min(48rem, 100% - 2.5rem);
   margin-inline: auto;
+  padding-block: clamp(1rem, 3vh, 2rem) clamp(2rem, 6vh, 4rem);
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -141,10 +147,16 @@ onMounted(load);
   font-weight: 700;
 }
 
+.saved__signin,
 .saved__empty,
 .saved__item {
   border-radius: 12px;
   padding: 1rem 1.15rem;
+}
+
+.saved__signin {
+  margin: 0;
+  color: var(--muted);
 }
 
 .saved__empty {

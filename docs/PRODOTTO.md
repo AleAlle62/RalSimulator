@@ -66,14 +66,35 @@ gradiente in sé, è **il gradiente al posto del contenuto**: numero enorme, tre
 niente da leggere. Qui il contenuto c'è e sta tutto sopra la piega; la decorazione fa il lavoro
 che le compete, cioè far venire voglia di premere il pulsante.
 
-Due vincoli che la tengono onesta:
+Un vincolo che la tiene onesta:
 
 - **Non scrolla.** Una schermata sola, come da elenco delle schermate. Se la spiegazione non ci
   sta, si taglia la spiegazione, non si aggiunge scroll.
-- **Si ferma alla CTA.** Dal wizard in poi torna a valere l'anti-riferimento numero due, senza
-  eccezioni: nessuno sfondo animato dietro dei numeri che qualcuno deve leggere e verificare.
 
 `prefers-reduced-motion` disattiva l'animazione dello sfondo, come ogni altra transizione.
+
+### Il tema non si ferma più alla CTA
+
+Decisione presa il **30/08/2026**, contro quanto diceva prima questo stesso documento. Il vincolo
+era: *«si ferma alla CTA — nessuno sfondo animato dietro dei numeri che qualcuno deve leggere e
+verificare»*. Ora Silk e il vetro corrono anche dietro wizard, risultato e simulazioni salvate.
+
+Quel vincolo era scritto per proteggere una cosa sola, la **leggibilità delle cifre**, e la
+proteggeva con lo strumento sbagliato: vietava il trattamento invece di vincolare il contrasto. Il
+problema non è mai stato lo sfondo, è la traslucenza sotto una colonna di importi. Quindi il
+divieto diventa una soglia:
+
+- I pannelli che portano cifre usano `.glass-panel`, tinta al **93%** di `--ink`. A quel punto il
+  testo poggia su un fondo praticamente opaco e ciò che resta del vetro è il bordo e la
+  rifrazione attorno.
+- **Misurato sul caso peggiore che può davvero capitare**, non stimato: pixel più chiaro del
+  canvas Silk campionato dal canvas (`rgb(42, 74, 134)`), velo al suo punto più trasparente, e
+  nessuno sconto per la sfocatura, che può solo abbassare quel picco. Corpo **16,57:1**,
+  secondario **7,67:1**, azzurro **8,94:1**, ambra **11,48:1**.
+
+L'anti-riferimento numero due resta in piedi per quello che dice davvero: **niente decorazione al
+posto del contenuto**. Nel risultato la decorazione sta dietro, il contenuto è ancora il numero e
+la sua scomposizione, e nessun totale compare senza le righe che lo producono.
 
 ## Accessibilità
 
