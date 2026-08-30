@@ -95,10 +95,19 @@ export default defineConfig((/* ctx */) => {
       // In production Laravel serves the SPA and the API from one origin. These proxies
       // reproduce that in development, so the session cookie and Sanctum's CSRF handshake
       // behave the same here as they will once built — no CORS, no separate auth path.
+      //
+      // `changeOrigin` MUST stay false, and it is the whole reason the promise above holds.
+      // Set to true, the proxy rewrites the Host header to localhost:5174, so Laravel's
+      // getHttpHost() answers 5174 while the browser's Referer still says 9200. Sanctum's
+      // EnsureFrontendRequestsAreStateful compares exactly those two, never matches, and
+      // silently applies no middleware — no StartSession, and no CSRF either. Every
+      // session-backed route then fails: register and login die on "Session store not set on
+      // request", /api/me answers 401 to a signed-in user, and POST /api/simulations appears
+      // to work only because the CSRF check it should have faced was skipped too.
       proxy: {
-        '/api': { target: 'http://localhost:5174', changeOrigin: true },
-        '/sanctum': { target: 'http://localhost:5174', changeOrigin: true },
-        '/admin': { target: 'http://localhost:5174', changeOrigin: true },
+        '/api': { target: 'http://localhost:5174', changeOrigin: false },
+        '/sanctum': { target: 'http://localhost:5174', changeOrigin: false },
+        '/admin': { target: 'http://localhost:5174', changeOrigin: false },
       },
     },
 

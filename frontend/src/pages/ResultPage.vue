@@ -159,6 +159,62 @@
           </div>
         </q-expansion-item>
 
+        <section class="keep glass-panel" aria-labelledby="keep-heading">
+          <h2 id="keep-heading" class="section__title">Tenere questo risultato</h2>
+
+          <p v-if="simulation?.mine" class="keep__state">
+            <span class="keep__mark" aria-hidden="true">✓</span>
+            <span>
+              È nelle tue simulazioni. La ritrovi da
+              <router-link to="/simulazioni" class="keep__link">Le mie simulazioni</router-link>,
+              con i numeri congelati a oggi.
+            </span>
+          </p>
+
+          <p v-else class="section__note keep__note">
+            Il link qui sotto funziona già e non scade: chi lo apre vede questi stessi numeri, non
+            un ricalcolo.
+            <template v-if="!auth.isAuthenticated">
+              Con un account la ritrovi anche senza tenerti il link da parte.
+            </template>
+          </p>
+
+          <div class="keep__actions">
+            <q-btn
+              unelevated
+              no-caps
+              color="primary"
+              text-color="dark"
+              class="keep__cta"
+              :label="copied ? 'Link copiato' : 'Copia il link'"
+              @click="copyLink"
+            />
+
+            <q-btn
+              v-if="!auth.isAuthenticated"
+              flat
+              no-caps
+              dark
+              color="primary"
+              label="Accedi per salvarla"
+              :to="`/accedi?ritorna=${route.fullPath}`"
+            />
+
+            <q-btn
+              v-else-if="simulation?.claimable"
+              flat
+              no-caps
+              dark
+              color="primary"
+              label="Salva nelle mie simulazioni"
+              :loading="saving"
+              @click="save"
+            />
+          </div>
+
+          <p v-if="saveFailure" class="keep__error" role="alert">{{ saveFailure }}</p>
+        </section>
+
         <section class="assumptions">
           <h2 class="section__title">Cosa non è compreso</h2>
           <p class="section__note">
@@ -168,23 +224,7 @@
           </p>
 
           <div class="assumptions__actions">
-            <q-btn
-              unelevated
-              no-caps
-              color="primary"
-              text-color="dark"
-              class="assumptions__cta"
-              label="Rifai il calcolo"
-              to="/simulazione"
-            />
-            <q-btn
-              flat
-              no-caps
-              dark
-              color="primary"
-              :label="copied ? 'Link copiato' : 'Copia il link'"
-              @click="copyLink"
-            />
+            <q-btn flat no-caps dark color="primary" label="Rifai il calcolo" to="/simulazione" />
           </div>
         </section>
       </template>
@@ -202,6 +242,7 @@ import AppHeader from '@/components/AppHeader.vue';
 import BreakdownRow from '@/components/BreakdownRow.vue';
 import SilkBackdrop from '@/components/SilkBackdrop.vue';
 import { useCurrency } from '@/composables/useCurrency';
+import { useAuthStore } from '@/stores/auth';
 import { useSimulationStore } from '@/stores/simulation';
 import type { PayslipKind } from '@/types/simulation';
 
@@ -221,11 +262,14 @@ import type { PayslipKind } from '@/types/simulation';
  */
 
 const route = useRoute();
+const auth = useAuthStore();
 const store = useSimulationStore();
 const { formatEuro, formatPercent } = useCurrency();
 
 const failure = ref<string | null>(null);
 const copied = ref(false);
+const saving = ref(false);
+const saveFailure = ref<string | null>(null);
 
 const simulation = computed(() => store.result);
 const breakdown = computed(() => store.result?.result ?? null);
@@ -291,12 +335,31 @@ async function copyLink() {
   setTimeout(() => (copied.value = false), 2000);
 }
 
+async function save() {
+  saving.value = true;
+  saveFailure.value = null;
+
+  try {
+    await store.claim(route.params.token as string);
+  } catch {
+    saveFailure.value = 'Non sono riuscito a salvarla. Riprova.';
+  } finally {
+    saving.value = false;
+  }
+}
+
 onMounted(async () => {
   const token = route.params.token as string;
 
   // Reading by token rather than trusting whatever the wizard left in memory: the same page
   // then serves a shared link, and the snapshot is the source either way.
-  if (store.result?.token === token) return;
+  //
+  // The copy in memory is reused only while its ownership flags can still be right. They are
+  // computed for whoever asked, so the copy fetched as a guest says `mine: false` forever —
+  // including right after signing in and coming back here, which is exactly when the page has
+  // to offer to save it.
+  const flagsCouldBeStale = auth.isAuthenticated && store.result?.mine === false;
+  if (store.result?.token === token && !flagsCouldBeStale) return;
 
   try {
     await store.loadByToken(token);
@@ -327,6 +390,7 @@ onMounted(async () => {
 .hero,
 .split,
 .payslips,
+.keep,
 .detail,
 .result__failure {
   border-radius: 16px;
@@ -334,7 +398,8 @@ onMounted(async () => {
 
 .hero,
 .split,
-.payslips {
+.payslips,
+.keep {
   padding: clamp(1.25rem, 3.5vw, 2rem);
 }
 
@@ -570,6 +635,54 @@ onMounted(async () => {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+.keep__note {
+  margin-bottom: 1.1rem;
+}
+
+.keep__state {
+  margin: 0 0 1.1rem;
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  font-size: var(--step-small);
+  color: var(--bone);
+  max-width: 62ch;
+  text-wrap: pretty;
+}
+
+/* The tick is decoration: the sentence next to it already says the simulation is saved, so a
+   screen reader that never sees this character loses nothing. */
+.keep__mark {
+  color: var(--azure);
+  font-weight: 700;
+  flex: none;
+}
+
+.keep__link {
+  color: var(--azure);
+  font-weight: 700;
+}
+
+.keep__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.keep__cta {
+  font-weight: 700;
+  padding: 0.6rem 1.5rem;
+  border-radius: 10px;
+}
+
+.keep__error {
+  margin: 0.9rem 0 0;
+  color: #e08a7d;
+  font-weight: 700;
+  font-size: var(--step-small);
 }
 
 .assumptions {

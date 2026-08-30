@@ -83,6 +83,10 @@ export interface Simulation {
   municipality: string | null;
   region: string | null;
   result: SalaryBreakdown;
+  /** Belongs to whoever is asking. Always false for a guest. */
+  mine: boolean;
+  /** Has no owner yet, so signing in is enough to make it yours. */
+  claimable: boolean;
 }
 
 export interface User {

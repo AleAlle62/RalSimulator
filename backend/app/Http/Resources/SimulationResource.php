@@ -27,6 +27,14 @@ class SimulationResource extends JsonResource
             'municipality' => $this->municipality?->name,
             'region' => $this->municipality?->region?->name,
             'result' => $this->result,
+
+            // Whose it is, told without ever naming the owner. The result page needs to know
+            // which of three things to offer — "salvata", "salvala", or "accedi per salvarla" —
+            // and these two booleans answer that for the current viewer only. A stranger's
+            // simulation reads as neither mine nor claimable, which is all a shared link is
+            // entitled to learn about the person who sent it.
+            'mine' => $request->user() !== null && $this->user_id === $request->user()->id,
+            'claimable' => $this->user_id === null,
         ];
     }
 }

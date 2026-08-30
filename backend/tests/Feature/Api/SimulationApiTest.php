@@ -133,3 +133,61 @@ it('lets the owner delete their own simulation', function () {
 
     expect(Simulation::query()->find($id))->toBeNull();
 });
+
+it('lets a signed-in user claim a simulation that has no owner', function () {
+    $user = User::factory()->create();
+    $token = $this->postJson('/api/simulations', validSimulationPayload())->json('data.token');
+
+    $response = $this->actingAs($user)
+        ->postJson("/api/me/simulations/{$token}/claim")
+        ->assertOk();
+
+    expect($response->json('data.mine'))->toBeTrue();
+    expect($response->json('data.claimable'))->toBeFalse();
+    expect(Simulation::query()->where('token', $token)->value('user_id'))->toBe($user->id);
+});
+
+it('shows a claimed simulation in the owner list', function () {
+    $user = User::factory()->create();
+    $token = $this->postJson('/api/simulations', validSimulationPayload())->json('data.token');
+
+    $this->actingAs($user)->postJson("/api/me/simulations/{$token}/claim");
+
+    expect($this->actingAs($user)->getJson('/api/me/simulations')->json('data.0.token'))
+        ->toBe($token);
+});
+
+it('refuses to claim a simulation that already belongs to someone else', function () {
+    $owner = User::factory()->create();
+    $stranger = User::factory()->create();
+
+    $token = $this->actingAs($owner)
+        ->postJson('/api/simulations', validSimulationPayload())
+        ->json('data.token');
+
+    // 404 and not 403: the caller only ever holds a token, so naming the owner would turn a
+    // guessed token into a way to probe which ones are taken.
+    $this->actingAs($stranger)->postJson("/api/me/simulations/{$token}/claim")->assertNotFound();
+
+    expect(Simulation::query()->where('token', $token)->value('user_id'))->toBe($owner->id);
+});
+
+it('requires authentication to claim a simulation', function () {
+    $token = $this->postJson('/api/simulations', validSimulationPayload())->json('data.token');
+
+    $this->postJson("/api/me/simulations/{$token}/claim")->assertUnauthorized();
+});
+
+it('reports a simulation as neither mine nor claimable to a stranger reading the link', function () {
+    $owner = User::factory()->create();
+    $stranger = User::factory()->create();
+
+    $token = $this->actingAs($owner)
+        ->postJson('/api/simulations', validSimulationPayload())
+        ->json('data.token');
+
+    $response = $this->actingAs($stranger)->getJson("/api/simulations/{$token}")->assertOk();
+
+    expect($response->json('data.mine'))->toBeFalse();
+    expect($response->json('data.claimable'))->toBeFalse();
+});

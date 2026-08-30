@@ -80,6 +80,30 @@ class SimulationController extends Controller
         );
     }
 
+    /**
+     * Attach an unowned simulation to the signed-in user.
+     *
+     * Calculating never required an account, so the simulation a visitor runs is stored with no
+     * owner and reachable only by its token. Without this, registering afterwards would leave
+     * that result stranded: the person would have the link in their address bar and no way to
+     * put it in the list the account exists to provide.
+     *
+     * Already-owned simulations 404 rather than 403. The token is the only thing the caller
+     * holds, and telling them "this one belongs to somebody else" would turn a guessed token
+     * into a way to probe which ones are taken.
+     */
+    public function claim(Request $request, string $token): SimulationResource
+    {
+        $simulation = Simulation::query()
+            ->where('token', $token)
+            ->whereNull('user_id')
+            ->firstOrFail();
+
+        $simulation->update(['user_id' => $request->user()->id]);
+
+        return new SimulationResource($simulation);
+    }
+
     public function destroy(Request $request, int $id): JsonResponse
     {
         // Scoping the lookup to the authenticated user's own simulations, rather than a

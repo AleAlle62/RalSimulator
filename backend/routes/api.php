@@ -18,5 +18,6 @@ Route::get('/simulations/{token}', [SimulationController::class, 'show']);
 
 Route::middleware('auth:sanctum')->prefix('me')->group(function () {
     Route::get('/simulations', [SimulationController::class, 'index']);
+    Route::post('/simulations/{token}/claim', [SimulationController::class, 'claim']);
     Route::delete('/simulations/{id}', [SimulationController::class, 'destroy']);
 });

@@ -73,6 +73,18 @@ export const useSimulationStore = defineStore('simulation', () => {
     return response.data;
   }
 
+  /**
+   * Make the open simulation belong to the signed-in user.
+   *
+   * Every simulation is already stored the moment it is calculated — this only puts an owner on
+   * one that had none, so it turns up in "Le mie simulazioni" instead of living solely in
+   * whoever's address bar.
+   */
+  async function claim(token: string) {
+    const response = await api.post<{ data: Simulation }>(`/api/me/simulations/${token}/claim`);
+    result.value = response.data;
+  }
+
   async function remove(id: number) {
     await api.delete(`/api/me/simulations/${id}`);
   }
@@ -97,6 +109,7 @@ export const useSimulationStore = defineStore('simulation', () => {
     run,
     loadByToken,
     listMine,
+    claim,
     remove,
     reset,
   };

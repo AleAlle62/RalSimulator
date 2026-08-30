@@ -86,7 +86,7 @@
 
 <script setup lang="ts">
 import { onUnmounted, reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import GlassEuro from '@/components/GlassEuro.vue';
 import SilkBackdrop from '@/components/SilkBackdrop.vue';
@@ -103,10 +103,26 @@ import { useAuthStore } from '@/stores/auth';
  */
 
 const auth = useAuthStore();
+const route = useRoute();
 const router = useRouter();
 
 const registering = ref(false);
 const busy = ref(false);
+
+/**
+ * Where to go once signed in.
+ *
+ * The result page sends people here to save a simulation, and dropping them on the wizard
+ * afterwards would lose the very result they came to keep. Only same-site paths are honoured:
+ * the parameter arrives from the URL, so anything else is an open redirect waiting to happen.
+ */
+function destination(): string {
+  const wanted = route.query.ritorna;
+  if (typeof wanted === 'string' && wanted.startsWith('/') && !wanted.startsWith('//')) {
+    return wanted;
+  }
+  return '/simulazione';
+}
 
 /**
  * The 3D panel is mounted, not merely hidden, only above this width.
@@ -147,7 +163,7 @@ async function submit() {
     } else {
       await auth.login({ email: form.email, password: form.password });
     }
-    await router.push('/simulazione');
+    await router.push(destination());
   } catch (error) {
     if (error instanceof ApiError) {
       for (const [field, messages] of Object.entries(error.errors)) {

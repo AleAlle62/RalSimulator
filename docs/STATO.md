@@ -379,7 +379,18 @@ invece di girare: un'estrusione vista di taglio smette di essere un euro.
    `GET /api/tax-years/{year}/municipalities` — il passo "luogo" non aveva da dove prendere i
    comuni. Il secondo elenca **solo i comuni che calcolano davvero**: offrirne uno la cui regione
    non ha scaglioni sarebbe un vicolo cieco presentato come una scelta.
-4. **La tabella "riga per riga" non era una tabella.** `BreakdownRow` chiamava il suo blocco
+4. **Nessuna rotta con sessione funzionava dal dev server.** Il proxy in `quasar.config.ts` aveva
+   `changeOrigin: true`, che riscrive l'header `Host` a `localhost:5174`: Laravel rispondeva 5174
+   a `getHttpHost()` mentre il `Referer` del browser diceva ancora 9200.
+   `EnsureFrontendRequestsAreStateful` confronta esattamente quei due, non combaciava mai, e
+   **non applicava alcun middleware in silenzio** — né `StartSession` né la verifica CSRF. Quindi
+   registrazione e login morivano su «Session store not set on request», `/api/me` rispondeva 401
+   a un utente loggato, e `POST /api/simulations` sembrava funzionare solo perché saltava anche il
+   controllo CSRF che avrebbe dovuto affrontare. Il commento sopra il proxy prometteva che in
+   sviluppo l'handshake si comportasse «come si comporterà una volta compilato»: era proprio
+   `changeOrigin` a rendere falsa quella promessa. Ora è `false`, e la verifica passa attraverso
+   la 9200 e non solo diretta sulla 5174 — che è il motivo per cui prima sembrava a posto.
+5. **La tabella "riga per riga" non era una tabella.** `BreakdownRow` chiamava il suo blocco
    `.row`, che è l'utility flexbox globale di Quasar: il `<tr>` ereditava `display: flex` e
    l'intera tabella usciva dal table formatting context. Ogni riga dimensionava per conto suo
    etichetta e importo, e la colonna delle cifre veniva fuori sfrangiata — su un prodotto che
@@ -387,11 +398,38 @@ invece di girare: un'estrusione vista di taglio smette di essere un euro.
    guardando la pagina. Il blocco ora si chiama `.line`, e il `<th>` è tornato una cella vera con
    il flex spostato dentro (anche lì `display: flex` su una cella la toglieva dalla tabella).
 
+#### Salvataggio e adozione — fatto, 6 test in più
+
+Una simulazione è **sempre** salvata, anche da ospite: `POST /api/simulations` scrive comunque la
+riga. Mancava solo che si vedesse, e mancava il pezzo che la rendeva utile.
+
+Il buco vero era che una simulazione fatta da ospite nasce con `user_id = null` e ci restava per
+sempre: chi si registrava dopo si ritrovava il link nella barra degli indirizzi e nessun modo di
+metterlo nella lista per cui l'account esiste. Aggiunto
+`POST /api/me/simulations/{token}/claim`, che attacca al richiedente una simulazione senza
+proprietario.
+
+`SimulationResource` espone due booleani, `mine` e `claimable`, calcolati **per chi chiede**. La
+pagina risultato ne ricava i suoi tre stati: «✓ è nelle tue simulazioni», «Salva nelle mie
+simulazioni», «Accedi per salvarla». Il link di login porta `?ritorna=`, validato contro gli
+open redirect (solo path che iniziano con `/` e non con `//`).
+
+Una simulazione già di qualcun altro risponde **404 e non 403**: chi chiama possiede solo un
+token, e rispondere «è di un altro» trasformerebbe un token indovinato in un modo per sondare
+quali sono presi.
+
+Un dettaglio che sembrava innocuo: `ResultPage` riusava la copia in memoria se il token
+combaciava. Ma `mine` è calcolato per chi ha chiesto, quindi la copia presa da ospite dice
+`mine: false` per sempre — compreso al ritorno dal login, cioè esattamente il momento in cui la
+pagina deve offrire di salvare. Ora la copia si riusa solo finché quei flag possono essere giusti.
+
 ### 2. Deploy
 
 - [ ] Scegliere l'host — criterio: **non deve dormire**. Laravel Cloud o Oracle Always Free
 - [ ] `sudo dnf install php-pgsql` se in produzione si va su Postgres
 - [ ] `php artisan user:promote` sull'utente in produzione
+
+La procedura passo passo sta in [DEPLOY.md](DEPLOY.md).
 
 ---
 
