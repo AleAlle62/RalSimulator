@@ -183,20 +183,71 @@ Il test mancante nella checklist ("un utente senza `is_admin` non vede nulla") o
 non solo sul metodo `canAccessPanel()` isolato: un utente loggato non admin che chiede
 `/admin/tax-years` riceve 403, un admin 200. In `tests/Feature/AdminAccessTest.php`.
 
+### API — completo, 26 test in più
+
+Fatta in una notte, senza controllo — la prossima sessione la riguarda per prima cosa. Otto
+rotte, tutte in `routes/api.php`:
+
+```
+POST   /api/register · /api/login · /api/logout          Sanctum, cookie di sessione
+GET    /api/tax-years/{year}                              costanti + scaglioni nazionali, con fonte
+POST   /api/simulations                                   calcola, salva, restituisce token + risultato
+GET    /api/simulations/{token}                            legge lo snapshot, pubblica
+GET    /api/me/simulations · DELETE .../{id}               con auth, scoping per proprietario
+```
+
+`StoreSimulationRequest`, `RegisterRequest`, `LoginRequest` in `app/Http/Requests/`;
+`SimulationController`, `TaxYearController`, `AuthController` in
+`app/Http/Controllers/Api/`; `SimulationResource`, `TaxYearDetailResource` in
+`app/Http/Resources/`.
+
+**L'anno non è mai un input.** Il contratto originale in questo file non menzionava il comune,
+ma il motore lo richiede — l'ho aggiunto come quarto campo obbligatorio. L'anno invece non è
+mai stato nel contratto ed è giusto così: `TaxYearRepository::currentYear()` lo risolve da solo
+(il massimo anno pubblicato), così una richiesta non può chiedere un anno più vecchio e più
+favorevole. Il comune è validato contro le sole città dell'anno corrente, non contro l'intero
+storico.
+
+`SalaryBreakdown` e le classi che lo compongono sono tutte `readonly` con proprietà pubbliche:
+`json_encode` le serializza da sole, comprese le enum, senza bisogno di un trasformatore scritto
+a mano. Il `result` salvato è esattamente l'oggetto restituito subito dopo il calcolo — nessuna
+differenza tra quello che vedi al momento e quello che rileggi dopo, come vuole lo snapshot.
+
+**Due bug veri, trovati solo testando su HTTP reale — nessuno dei due l'ha preso Pest:**
+
+1. Il middleware statale di Sanctum si attiva solo se la richiesta ha un header
+   `Referer`/`Origin` che combacia con un dominio noto. La lista di default copriva solo la
+   porta di `APP_URL` (8000); il dev server di questo progetto gira su 5174
+   (`.claude/launch.json`). Corretto abilitando `Sanctum::currentRequestHost()` in
+   `config/sanctum.php` — coerente con l'architettura same-origin: qualunque host serva la
+   richiesta è per definizione quello giusto, e il CSRF resta comunque obbligatorio.
+2. Un ospite che chiede una rotta protetta **senza** header `Accept: application/json` mandava
+   in crash l'app con 500 invece di un 401 pulito: il default di Laravel prova a fare redirect
+   a una route `login` che qui non esiste, perché non c'è nessuna pagina di login server-side.
+   Corretto con `$middleware->redirectGuestsTo(fn () => null)` in `bootstrap/app.php`. Un
+   client reale che dimentica quell'header — e non è garantito che axios/fetch lo mandi sempre
+   — avrebbe preso lo stesso crash.
+
+Verificato via `curl` con il giro CSRF completo (`/sanctum/csrf-cookie` → `X-XSRF-TOKEN`), non
+solo nei test: registrazione, simulazione da loggato, lettura di `/api/me/simulations`, logout,
+e che dopo il logout la stessa rotta torni un 401 pulito. I dati di prova creati durante questa
+verifica sono stati ripuliti dal database di sviluppo.
+
+Corretti anche, incontrati per strada:
+
+- `SESSION_DRIVER=database` senza dubbio sulla tabella `sessions` — falso allarme, la tabella
+  c'era già (nella migration `users`, come fa lo scaffold di Laravel), il comando `sqlite3` non
+  era installato e la verifica falliva in silenzio.
+- `bootstrap/app.php` non aveva `$middleware->statefulApi()`: senza, Sanctum non avrebbe mai
+  autenticato via cookie di sessione, indipendentemente da tutto il resto.
+- `App\Models\User` non aveva `HasApiTokens` né una relazione `simulations()` — aggiunte
+  entrambe.
+
 ---
 
 ## Da fare, in ordine
 
-### 1. API
-
-- [ ] `POST /api/simulations` — calcola, salva, restituisce token e risultato
-- [ ] `GET /api/simulations/{token}` — legge lo snapshot
-- [ ] `GET /api/me/simulations` · `DELETE /api/me/simulations/{id}` — con auth
-- [ ] `GET /api/tax-years/{year}` — costanti e fonti, per il "riga per riga"
-- [ ] Registrazione e login via Sanctum, cookie di sessione same-origin
-- [ ] FormRequest per validare l'input: **il motore non valida**, è compito del confine
-
-### 2. Frontend Quasar
+### 1. Frontend Quasar
 
 - [ ] Progetto Quasar CLI in `frontend/`, build dentro `backend/public`
 - [ ] Route catch-all in Laravel per servire la SPA
@@ -205,9 +256,13 @@ non solo sul metodo `canAccessPanel()` isolato: un utente loggato non admin che 
 - [ ] Donut col buco che fa da display (hover scrive al centro)
 - [ ] Loader didattico ~800 ms coi passaggi reali
 - [ ] "Riga per riga" con tabella per scaglione
-- [ ] "Le mie simulazioni" · pagina `/s/{token}` con meta OpenGraph
+- [ ] "Le mie simulazioni"
 
-### 3. Deploy
+`/s/{token}` **non è di questo blocco**: per `CLAUDE.md` è renderizzata server-side da Blade,
+non dalla SPA — serve alle meta OpenGraph. È backend, va con la route catch-all sopra, non con
+Quasar. L'API che le serve entrambe (`GET /api/simulations/{token}`) c'è già.
+
+### 2. Deploy
 
 - [ ] Scegliere l'host — criterio: **non deve dormire**. Laravel Cloud o Oracle Always Free
 - [ ] `sudo dnf install php-pgsql` se in produzione si va su Postgres

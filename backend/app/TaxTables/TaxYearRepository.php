@@ -27,6 +27,18 @@ use App\Models\TaxYear;
  */
 final class TaxYearRepository
 {
+    /**
+     * The year a new simulation uses. Never taken from the request: a client choosing its own
+     * year could pick an older, more favourable one, and the whole point of versioning by year
+     * is that nobody outside this table gets to make that choice.
+     */
+    public function currentYear(): int
+    {
+        $year = TaxYear::query()->published()->max('year');
+
+        return $year ?? throw MissingTaxDataException::noPublishedYear();
+    }
+
     public function configFor(int $year, string $municipality): TaxYearConfig
     {
         $taxYear = TaxYear::query()->published()->where('year', $year)->first();

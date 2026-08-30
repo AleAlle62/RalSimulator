@@ -1,8 +1,20 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\SimulationController;
+use App\Http\Controllers\Api\TaxYearController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
+Route::get('/tax-years/{year}', [TaxYearController::class, 'show']);
+
+Route::post('/simulations', [SimulationController::class, 'store']);
+Route::get('/simulations/{token}', [SimulationController::class, 'show']);
+
+Route::middleware('auth:sanctum')->prefix('me')->group(function () {
+    Route::get('/simulations', [SimulationController::class, 'index']);
+    Route::delete('/simulations/{id}', [SimulationController::class, 'destroy']);
+});

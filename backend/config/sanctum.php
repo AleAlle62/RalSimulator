@@ -18,11 +18,18 @@ return [
     |
     */
 
+    /*
+    | currentRequestHost() is on, not just currentApplicationUrlWithPort(): CLAUDE.md commits
+    | this app to one origin always (decision "Niente CORS. Stessa origine..."), so whatever
+    | host actually served the request is by definition the frontend's own host — on any dev
+    | port, not just the one baked into APP_URL. This does not weaken CSRF: the token is still
+    | required for state changing requests regardless of which host passed this check.
+    */
     'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
-        '%s%s',
+        '%s%s%s',
         'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
         Sanctum::currentApplicationUrlWithPort(),
-        // Sanctum::currentRequestHost(),
+        Sanctum::currentRequestHost(),
     ))),
 
     /*

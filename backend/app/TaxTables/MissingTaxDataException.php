@@ -19,6 +19,12 @@ final class MissingTaxDataException extends RuntimeException
         return new self("No published tax year for {$year}.");
     }
 
+    /** No year has ever been published: the calculator has nothing to compute with at all. */
+    public static function noPublishedYear(): self
+    {
+        return new self('No tax year is published yet.');
+    }
+
     public static function unknownMunicipality(int $year, string $name): self
     {
         return new self("Municipality \"{$name}\" is not among the ones seeded for {$year}.");

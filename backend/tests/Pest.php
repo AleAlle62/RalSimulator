@@ -16,6 +16,14 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
+    ->beforeEach(function () {
+        // Sanctum's stateful middleware — the one that attaches a session to an API request at
+        // all — only engages when the request looks like it came from the frontend: a Referer
+        // or Origin header matching a stateful domain. A browser sends this by itself; a test
+        // request does not, so every Feature test gets it for free rather than each one having
+        // to add it before hitting a session backed route.
+        $this->withHeader('Referer', config('app.url').'/');
+    })
     ->in('Feature');
 
 /*
