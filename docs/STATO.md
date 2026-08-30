@@ -249,10 +249,12 @@ Corretti anche, incontrati per strada:
 
 ### 1. Frontend Quasar
 
-- [ ] Progetto Quasar CLI in `frontend/`, build dentro `backend/public`
-- [ ] Route catch-all in Laravel per servire la SPA
-- [ ] Landing one-page senza scroll
-- [ ] Wizard: RAL → mensilità → settore → luogo → risultato
+- [x] Progetto Quasar CLI in `frontend/`, build dentro `backend/public`
+- [x] Route catch-all in Laravel per servire la SPA
+- [x] Landing one-page senza scroll
+- [ ] **Wizard: RAL → mensilità → settore → luogo → risultato — il prossimo pezzo.**
+      Attenzione: la CTA della landing punta già a `/simulazione`, che **oggi cade sul 404**.
+      È l'azione principale della pagina, quindi è la prima cosa da chiudere.
 - [ ] Donut col buco che fa da display (hover scrive al centro)
 - [ ] Loader didattico ~800 ms coi passaggi reali
 - [ ] "Riga per riga" con tabella per scaglione
@@ -261,6 +263,55 @@ Corretti anche, incontrati per strada:
 `/s/{token}` **non è di questo blocco**: per `CLAUDE.md` è renderizzata server-side da Blade,
 non dalla SPA — serve alle meta OpenGraph. È backend, va con la route catch-all sopra, non con
 Quasar. L'API che le serve entrambe (`GET /api/simulations/{token}`) c'è già.
+
+#### Impianto frontend, già fatto
+
+Quasar 2.28 · Vue 3 · TypeScript · Pinia · pnpm. Dev server sulla **9200**, con proxy di `/api`,
+`/sanctum` e `/admin` sulla 5174: anche in sviluppo è same-origin come in produzione, quindi il
+cookie di sessione e l'handshake CSRF si comportano già come si comporteranno una volta
+compilato.
+
+**Il build non può puntare `distDir` su `backend/public`.** Ci ho provato e ha cancellato
+`index.php` e tutti gli asset di Filament: prima di ogni build Quasar esegue
+`removeBuildArtifacts()`, che è un `fse.removeSync()` sull'intera `distDir`. Non è
+un'impostazione di Vite, quindi `build.emptyOutDir` non la disattiva. Ora `pnpm build` compila
+in `dist/spa` e poi copia con `frontend/scripts/copy-to-laravel.mjs`, che rimuove **solo** ciò
+che possiede la SPA (`assets/`, `icons/`, `index.html`). Se il server Laravel gira mentre
+succede una cosa del genere, va riavviato: il processo tiene aperto il vecchio inode della
+document root e risponde 500 a tutto.
+
+Verificato dopo il build: `/` e i deep link servono la SPA, `/admin` resta Filament, `/api`
+resta l'API. `backend/public/favicon.ico` risulta modificato in git perché la SPA sovrascrive il
+placeholder vuoto di Laravel: è corretto, semmai va tolto dal tracking.
+
+#### Landing — fatta
+
+`src/pages/LandingPage.vue`, una schermata sola. Sfondo Aurora di [Vue Bits](https://vue-bits.dev)
+(WebGL via `ogl`, MIT) **vendorizzato a mano** in `src/components/vendor/Aurora.vue`: vue-bits
+distribuisce i sorgenti con `jsrepo`, non come pacchetto runtime, e la configurazione dei path di
+jsrepo non funzionava. Il file resta verbatim per poterlo risincronizzare; palette e
+`prefers-reduced-motion` stanno nel wrapper `AuroraBackdrop.vue`, che sotto reduced-motion **non
+avvia proprio il render loop** invece di limitarsi a rallentarlo.
+
+- **Font: Atkinson Hyperlegible Next**, disegnato dal Braille Institute per la leggibilità a
+  bassa visione. "Leggibile" è una delle tre parole del brand e il prodotto promette che il
+  risultato lo capisca chiunque: il font è quella promessa applicata a sé stessa.
+- **Palette:** nero-muschio, accento fosforo, un solo oro per la cifra su cui deve cadere
+  l'occhio. Evita tutti e tre gli anti-riferimenti (tabella grigia, gradiente SaaS,
+  navy-e-oro). **Contrasti misurati, non stimati:** corpo 16.75:1, secondario 7.65:1, accento
+  10.17:1, testo del pulsante 10.17:1.
+- **Il titolo usa numeri veri:** 35.000 € lordi → 25.967,22 € netti, lo stesso valore che
+  asserisce il test del backend, così la landing non può divergire da quello che calcola il
+  motore.
+
+**Un bug trovato e corretto, da ricordare:** `useCountUp` all'inizio partiva da zero e saliva con
+`requestAnimationFrame`. Se rAF non parte — scheda in background, prerender, screenshot headless —
+il valore a riposo restava **0,00 €**: non un'animazione mancata, ma l'affermazione che il netto è
+zero. Ora il valore di partenza è quello finale e l'azzeramento avviene dentro il primo frame:
+se quel frame non arriva, sullo schermo c'è sempre stata la cifra giusta.
+
+`PRODUCT.md` in radice è un **puntatore** a `PRODOTTO.md`, non una seconda specifica: serve solo
+perché la skill `impeccable` cerca quel nome. Se divergono, vince `PRODOTTO.md`.
 
 ### 2. Deploy
 

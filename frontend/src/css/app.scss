@@ -1,0 +1,78 @@
+// Design tokens and base styles.
+//
+// Typeface: Atkinson Hyperlegible Next, drawn by the Braille Institute so that characters stay
+// distinguishable for low-vision readers. Chosen because "leggibile" is one of the three brand
+// words in docs/PRODOTTO.md and because the product's whole claim is that anyone can read the
+// result, not only someone who reads payslips for a living.
+
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,200..800;1,200..800&display=swap');
+
+:root {
+  // Verified contrast against --ink: bone 16.75:1, muted 7.65:1, moss 10.17:1,
+  // ink-on-moss 10.17:1. Moss-deep is 4.66:1, so it is decoration and large text only.
+  --ink: #0c100e;
+  --surface: #151b17;
+  --surface-raised: #1d251f;
+  --bone: #ecf1ec;
+  --muted: #9aa79d;
+  --moss: #8fcb95;
+  --moss-deep: #4e8a5a;
+  --gold: #d8b45f;
+
+  --hairline: rgba(236, 241, 236, 0.14);
+
+  // Fluid scale, ratio well above 1.25 between steps. The display max stays at 4.75rem:
+  // large enough to lead the page, short of the shouting range.
+  --step-display: clamp(2.5rem, 1.2rem + 5vw, 4.75rem);
+  --step-lead: clamp(1.125rem, 0.95rem + 0.75vw, 1.5rem);
+  --step-body: clamp(1rem, 0.95rem + 0.2vw, 1.0625rem);
+  --step-small: 0.9375rem;
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+
+  // Semantic, so no one has to invent a 9999 later.
+  --z-backdrop: 0;
+  --z-content: 10;
+  --z-sticky: 100;
+  --z-modal: 400;
+  --z-toast: 500;
+}
+
+html,
+body,
+#q-app {
+  height: 100%;
+}
+
+body {
+  background: var(--ink);
+  color: var(--bone);
+  font-family: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif;
+  font-size: var(--step-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+// Every figure in this product sits in a column that has to line up with the one above it.
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+// Focus has to stay visible on a dark surface, and the default Quasar ring does not read here.
+:focus-visible {
+  outline: 2px solid var(--moss);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

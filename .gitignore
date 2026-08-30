@@ -9,8 +9,10 @@
 node_modules/
 
 # La SPA compilata finisce dentro backend/public: è un artefatto di build,
-# si rigenera con `quasar build` e non va versionata.
+# si rigenera con `pnpm build` e non va versionata.
 # Non c'è collisione con Laravel: lì stanno index.php e gli asset di Filament
-# sotto css/filament e js/filament, Quasar scrive index.html e assets/.
+# sotto css/filament, js/filament e fonts/filament; Quasar scrive index.html,
+# assets/ e icons/ — e solo quelli, vedi frontend/scripts/copy-to-laravel.mjs.
 backend/public/index.html
 backend/public/assets/
+backend/public/icons/

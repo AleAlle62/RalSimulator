@@ -1,0 +1,24 @@
+// Brand colours, fed to Quasar so its components inherit them instead of the default blue.
+// Contrast ratios are verified, not estimated — see the table in app.scss.
+//
+// The palette answers the scene the product is used in: someone at a kitchen table late at
+// night, screen the only light in the room, trying to see what actually lands in the bank.
+// Hence a near-black surface with a moss-phosphor accent, which also happens to miss all three
+// anti-references in docs/PRODOTTO.md: the grey table, the SaaS gradient, the navy-and-gold
+// fintech dashboard.
+
+$primary: #8fcb95; // moss, light enough to carry near-black text on a button
+$secondary: #4e8a5a; // deeper moss, decoration and large text only
+$accent: #d8b45f; // used once, for the figure the eye should land on
+
+$dark: #151b17; // raised surface
+$dark-page: #0c100e; // page
+
+$positive: #8fcb95;
+$negative: #e0796d;
+$info: #7fb4c4;
+$warning: #d8b45f;
+
+// Numbers are the content of this product, so they align by default rather than on request.
+$typography-font-family:
+  'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif;

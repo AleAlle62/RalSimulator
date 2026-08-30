@@ -36,7 +36,9 @@ Tre parole: **rigoroso, leggibile, onesto**.
 - **I calcolatori di stipendio esistenti**: muri di banner attorno a una tabella grigia, costanti
   fiscali di tre anni fa, nessuna indicazione di come sia stato ottenuto il risultato.
 - **L'estetica landing-page SaaS**: numero enorme al centro, gradiente, tre card identiche sotto.
-  Qui il numero finale conta meno del percorso che ci porta.
+  Qui il numero finale conta meno del percorso che ci porta. **Vale da dentro il calcolatore in
+  poi** — wizard, risultato, riga per riga: lì niente decorazione, il contenuto è il numero e la
+  sua scomposizione. La landing è esplicitamente esclusa, vedi sotto.
 - **Il cruscotto fintech navy-e-oro.** Questo non è un prodotto finanziario: è un foglio di
   calcolo che sa spiegarsi.
 
@@ -54,8 +56,24 @@ Tre parole: **rigoroso, leggibile, onesto**.
    sparire dentro il compito.
 
 La landing page è l'unica schermata che può permettersi di essere memorabile invece che
-invisibile: è l'unica il cui compito è convincere qualcuno a cominciare. Ma vale comunque
-l'anti-riferimento numero due.
+invisibile: è l'unica il cui compito è convincere qualcuno a cominciare.
+
+**Ed è l'unica dove l'anti-riferimento numero due non si applica.** Decisione presa il
+30/08/2026, contro quanto diceva prima questo stesso documento: la landing usa uno sfondo
+animato (Aurora di [Vue Bits](https://vue-bits.dev), WebGL, MIT) e un gradiente. Il motivo è che
+i due anti-riferimenti colpiscono cose diverse — il problema del cruscotto SaaS non è il
+gradiente in sé, è **il gradiente al posto del contenuto**: numero enorme, tre card vuote,
+niente da leggere. Qui il contenuto c'è e sta tutto sopra la piega; la decorazione fa il lavoro
+che le compete, cioè far venire voglia di premere il pulsante.
+
+Due vincoli che la tengono onesta:
+
+- **Non scrolla.** Una schermata sola, come da elenco delle schermate. Se la spiegazione non ci
+  sta, si taglia la spiegazione, non si aggiunge scroll.
+- **Si ferma alla CTA.** Dal wizard in poi torna a valere l'anti-riferimento numero due, senza
+  eccezioni: nessuno sfondo animato dietro dei numeri che qualcuno deve leggere e verificare.
+
+`prefers-reduced-motion` disattiva l'animazione dello sfondo, come ogni altra transizione.
 
 ## Accessibilità
 
