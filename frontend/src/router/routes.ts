@@ -2,7 +2,7 @@ import type { RouteRecordRaw } from 'vue-router';
 
 /**
  * No shared layout wrapper: the landing and the calculator are deliberately different worlds
- * (docs/PRODOTTO.md — decoration stops at the CTA), so neither inherits the other's chrome.
+ * (see the README), so neither inherits the other's chrome.
  * AppHeader is what they do share, and each page places it itself.
  */
 const routes: RouteRecordRaw[] = [

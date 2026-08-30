@@ -251,7 +251,7 @@ import type { PayslipKind } from '@/types/simulation';
  *
  * The order answers the employee's questions first — how much, how much a month, where the rest
  * went — and puts the reviewer's line-by-line audit behind a disclosure. That is the progressive
- * disclosure docs/PRODOTTO.md asks for, not a retreat from principle 1: the split and its legend
+ * disclosure the README asks for, not a retreat from it: the split and its legend
  * are on screen unopened, so no total is ever shown without its decomposition.
  *
  * The one thing this page must not get wrong is the exempt sums. They are not a slice of the
@@ -404,7 +404,7 @@ onMounted(async () => {
 }
 
 /* The headline block. One figure is allowed to be loud here; everything under it is quiet, which
-   is what keeps this from becoming the SaaS hero docs/PRODOTTO.md lists as an anti-reference. */
+   is what keeps this from becoming the SaaS hero the README lists as an anti-reference. */
 .hero__context {
   margin: 0;
   color: var(--muted);

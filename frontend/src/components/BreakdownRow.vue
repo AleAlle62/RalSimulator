@@ -21,7 +21,7 @@ import { useCurrency, type LineSign } from '@/composables/useCurrency';
  * One line of the gross-to-net journey.
  *
  * The operator is a real character in the markup and a real word for screen readers, not a
- * colour: docs/PRODOTTO.md requires that money leaving and money arriving stay distinguishable
+ * colour: the README requires that money leaving and money arriving stay distinguishable
  * without colour vision, and red/green is the most common way that fails.
  *
  * The block is called `line` and not `row` because `.row` is Quasar's flexbox grid utility. Named

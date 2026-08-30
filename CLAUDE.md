@@ -11,8 +11,8 @@ fonti citate valgono più di qualsiasi cosa lato interfaccia.
 > Le linee guida di sviluppo (SOLID, naming, clean code, testing) arrivano dal `CLAUDE.md`
 > globale. Qui c'è solo ciò che è specifico di questo progetto.
 
-**Prima di lavorare, leggi [docs/STATO.md](docs/STATO.md):** dice a che punto siamo, cosa
-manca e da dove si riparte.
+**Prima di lavorare, leggi [README.md](README.md):** avvio, database, contratto API, sessione,
+struttura del frontend, pannello Filament e le regole del calcolo.
 
 **Come si lavora qui: un file alla volta.** Nome, posizione, cosa fa e perché in poche righe,
 poi si aspetta l'ok, poi si scrive. Vale anche per i file piccoli.
@@ -41,7 +41,7 @@ Il vincolo che governa tutto: **si deploya una cosa sola.**
 frontend/          SPA Quasar (Quasar CLI)
     └── build ──►  backend/public/
 backend/           Laravel — API, motore fiscale, auth, admin
-docs/              FISCO-2026.md e altra documentazione
+README.md          avvio, architettura, API, sessione, Filament, il calcolo
 ```
 
 Quasar builda in file statici, Laravel li serve. Una route catch-all restituisce `index.html`
@@ -113,12 +113,15 @@ per un'azienda che fa buste paga è esattamente la domanda che verrà.
 
 ### Il dominio fiscale
 
-[docs/FISCO-2026.md](docs/FISCO-2026.md) è la **specifica completa e autosufficiente** del
-calcolo: ogni costante con la fonte, ogni formula, l'ordine delle operazioni, i tre gradini e
-tutti i casi di verifica con i valori attesi.
+La sezione «I calcoli» del [README](README.md#i-calcoli) tiene le costanti, l'ordine delle
+operazioni e i tre gradini. **Le fonti primarie stanno nel database**, in `source_url` e
+`source_label` accanto a ogni costante: è lì che si verifica un valore, non in un file.
 
-Chi tocca il motore parte da lì. Chi scrive i test porta quei casi. Chi aggiorna le costanti
-verifica contro quelle fonti.
+I casi di verifica con i valori attesi sono la suite Pest — `backend/tests/`, 121 test. Chi
+tocca il motore parte da quelli.
+
+La specifica estesa era in `docs/FISCO-2026.md`, rimossa il 30/08/2026 accorpando la
+documentazione nel README. Resta in git: `git show 7c8edf1:docs/FISCO-2026.md`.
 
 Regole che non si negoziano:
 

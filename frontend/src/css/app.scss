@@ -2,7 +2,7 @@
 //
 // Typeface: Atkinson Hyperlegible Next, drawn by the Braille Institute so that characters stay
 // distinguishable for low-vision readers. Chosen because "leggibile" is one of the three brand
-// words in docs/PRODOTTO.md and because the product's whole claim is that anyone can read the
+// words in the README and because the product's whole claim is that anyone can read the
 // result, not only someone who reads payslips for a living.
 
 @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,200..800;1,200..800&display=swap');
@@ -85,8 +85,8 @@ body {
  * The glass panels. `.glass` is chrome — header, landing, login. `.glass-panel` is the same
  * treatment at the deep tint, for the screens where figures are read.
  *
- * The split is the whole point. docs/PRODOTTO.md used to stop the glass at the CTA, on the
- * grounds that frosted glass behind a column of euro amounts costs legibility for decoration.
+ * The split is the whole point. The glass used to stop at the CTA, on the grounds that
+ * frosted glass behind a column of euro amounts costs legibility for decoration.
  * That objection was about translucency, not about blur or edges, so the wizard and the result
  * get the look at a tint deep enough that the objection no longer bites: the text sits on
  * effectively opaque ink, and what shows through is the border and the refraction around it.

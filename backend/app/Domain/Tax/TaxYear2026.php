@@ -19,7 +19,7 @@ use App\Domain\Tax\Surtaxes\SurtaxesConfig;
  * reference the seeder is tested against: a test builds the configuration from the database
  * and asserts it equals this one, so a mistyped rate cannot pass unnoticed.
  *
- * Formulas, thresholds and every verification case: docs/FISCO-2026.md
+ * Formulas, thresholds and every verification case: the README's «I calcoli» section
  */
 final class TaxYear2026
 {

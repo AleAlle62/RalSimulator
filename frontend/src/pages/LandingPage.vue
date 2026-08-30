@@ -84,7 +84,7 @@ const authorLinks = [
 .landing {
   position: relative;
   min-height: 100dvh;
-  /* One screen, no scroll: the constraint in docs/PRODOTTO.md. If the copy stops fitting, the
+  /* One screen, no scroll: the constraint in the README. If the copy stops fitting, the
      copy gets cut, not the constraint. */
   overflow: hidden;
   display: flex;

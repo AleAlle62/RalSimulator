@@ -3,7 +3,7 @@
  *
  * Every figure this product shows is a euro amount somebody may check against a payslip, so the
  * formatting is fixed rather than per-call: two decimals always, thousands separated, and the
- * sign carried explicitly where a line is a deduction or a credit. docs/PRODOTTO.md requires
+ * sign carried explicitly where a line is a deduction or a credit. The README requires
  * that sign for a reason beyond style — colour alone must never say whether money left or
  * arrived, since red/green is the most common form of colour blindness.
  */
