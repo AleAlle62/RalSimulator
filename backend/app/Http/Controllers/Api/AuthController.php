@@ -46,6 +46,15 @@ class AuthController extends Controller
         return response()->json(['user' => Auth::user()]);
     }
 
+    /**
+     * Who the session belongs to. The SPA calls this once at start-up to pick up an existing
+     * cookie; a 401 is the ordinary answer for a visitor who never signed in, not an error.
+     */
+    public function me(Request $request): JsonResponse
+    {
+        return response()->json(['user' => $request->user()]);
+    }
+
     public function logout(Request $request): JsonResponse
     {
         Auth::guard('web')->logout();

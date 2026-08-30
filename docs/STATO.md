@@ -252,9 +252,11 @@ Corretti anche, incontrati per strada:
 - [x] Progetto Quasar CLI in `frontend/`, build dentro `backend/public`
 - [x] Route catch-all in Laravel per servire la SPA
 - [x] Landing one-page senza scroll
-- [ ] **Wizard: RAL → mensilità → settore → luogo → risultato — il prossimo pezzo.**
-      Attenzione: la CTA della landing punta già a `/simulazione`, che **oggi cade sul 404**.
-      È l'azione principale della pagina, quindi è la prima cosa da chiudere.
+- [x] Wizard: RAL → mensilità → settore → luogo → risultato
+- [x] Header condiviso, login e registrazione, "Le mie simulazioni"
+- [ ] Donut col buco che fa da display (hover scrive al centro) — oggi c'è una barra
+      segmentata con legenda, che assolve alla stessa regola ("il colore non porta mai da solo
+      il significato") ma non è ancora il donut descritto qui sotto
 - [ ] Donut col buco che fa da display (hover scrive al centro)
 - [ ] Loader didattico ~800 ms coi passaggi reali
 - [ ] "Riga per riga" con tabella per scaglione
@@ -312,6 +314,57 @@ se quel frame non arriva, sullo schermo c'è sempre stata la cifra giusta.
 
 `PRODUCT.md` in radice è un **puntatore** a `PRODOTTO.md`, non una seconda specifica: serve solo
 perché la skill `impeccable` cerca quel nome. Se divergono, vince `PRODOTTO.md`.
+
+#### Tema liquid glass e resto della SPA — fatti
+
+Palette virata al **blu** (era verde muschio): nero-blu, azzurro come primario, un solo ambra
+speso sulla cifra su cui deve cadere l'occhio. Sfondo animato **Silk** al posto di Aurora (stesso
+`ogl`, nessuna dipendenza nuova).
+
+**Dove il vetro si ferma.** Il liquid glass sta su header, landing e login. Wizard, risultato e
+simulazioni salvate usano `.panel-solid`: superficie piena, niente sfocatura. È la stessa linea
+che `PRODOTTO.md` traccia alla CTA, applicata al tema — il vetro smerigliato dietro una colonna
+di importi costa contrasto proprio a chi quei numeri deve verificarli. Contrasti rimisurati sul
+blu, **inclusa la peggior condizione**, cioè testo su un pannello di vetro sopra il punto più
+chiaro di Silk: corpo 13,80:1, secondario 6,39:1.
+
+Il vetro è **CSS** (`backdrop-filter`), non il componente `GlassSurface` di Vue Bits. Quel
+componente ottiene la rifrazione con filtri SVG che funzionano **solo su Chromium** — ha lui
+stesso il rilevamento e su Safari e Firefox degrada a sfocatura semplice, cioè esattamente il
+risultato del CSS. Se serve la rifrazione vera si può vendorizzare, sapendo che la vedrà una
+parte dei visitatori.
+
+```
+src/
+├── components/   AppHeader · SilkBackdrop · GlassPrism · BreakdownRow · vendor/Silk
+├── composables/  useCurrency · useCountUp
+├── services/     api.ts — un solo posto che parla con Laravel
+├── stores/       auth · simulation
+└── pages/        Landing · Wizard · Result · Login · SavedSimulations
+```
+
+**Il client non calcola niente.** Il wizard raccoglie quattro risposte, le manda e mostra lo
+snapshot che torna. Verificato dal browser sul flusso reale: 35.000 commercio 14 mensilità a
+Milano → netto **25.967,22 €**, busta **1.910,42 €**, tredicesima **1.521,07 €**, gli stessi
+numeri che asserisce il backend.
+
+Il 3D del login è three.js (~600 KB, costo accettato consapevolmente): un ottaedro di vetro che
+gira e segue il puntatore.
+
+**Tre bug trovati testando davvero, non solo compilando:**
+
+1. Il canvas 3D restava 300×150. Era montato dentro un contenitore `display:none`, quindi il
+   `ResizeObserver` misurava zero e non rimisurava più quando il pannello compariva. Ora sotto i
+   60rem il componente **non viene montato affatto**: su telefono non si crea nemmeno un contesto
+   WebGL.
+2. Gli importi sotto i 10.000 € uscivano senza separatore (`1910,42` accanto a `25.967,22`).
+   Non era un errore mio: per l'italiano Intl raggruppa solo da cinque cifre. Forzato, perché
+   queste cifre si leggono in colonna e si confrontano con un cedolino.
+3. Mancavano due endpoint che il frontend richiedeva: `GET /api/me` (l'header non poteva sapere
+   chi fosse loggato senza dedurlo da un'altra rotta) e
+   `GET /api/tax-years/{year}/municipalities` — il passo "luogo" non aveva da dove prendere i
+   comuni. Il secondo elenca **solo i comuni che calcolano davvero**: offrirne uno la cui regione
+   non ha scaglioni sarebbe un vicolo cieco presentato come una scelta.
 
 ### 2. Deploy
 

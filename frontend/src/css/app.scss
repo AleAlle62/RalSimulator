@@ -8,18 +8,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,200..800;1,200..800&display=swap');
 
 :root {
-  // Verified contrast against --ink: bone 16.75:1, muted 7.65:1, moss 10.17:1,
-  // ink-on-moss 10.17:1. Moss-deep is 4.66:1, so it is decoration and large text only.
-  --ink: #0c100e;
-  --surface: #151b17;
-  --surface-raised: #1d251f;
-  --bone: #ecf1ec;
-  --muted: #9aa79d;
-  --moss: #8fcb95;
-  --moss-deep: #4e8a5a;
-  --gold: #d8b45f;
+  // Measured, not estimated. Against --ink: bone 16.78:1, muted 7.77:1, azure 9.05:1,
+  // amber 11.63:1, ink-on-azure 9.05:1. Against a glass panel sitting over Silk's brightest
+  // point: bone 13.80:1, muted 6.39:1. Azure-deep is 3.97:1, so it is decoration and large
+  // text only, never body copy.
+  --ink: #080c14;
+  --surface: #101724;
+  --surface-raised: #182132;
+  --bone: #e8eef7;
+  --muted: #96a4bc;
+  --azure: #7fb2ff;
+  --azure-deep: #3c6fc4;
+  --amber: #f0c070;
 
-  --hairline: rgba(236, 241, 236, 0.14);
+  --hairline: rgba(232, 238, 247, 0.14);
+
+  // The glass system. Panels are tinted this heavily on purpose: at 82% ink over Silk's
+  // brightest point the body text still measures 13.80:1, which is what lets the theme run
+  // behind content without the contrast becoming a matter of opinion.
+  --glass-tint: rgba(8, 12, 20, 0.82);
+  --glass-tint-light: rgba(8, 12, 20, 0.6);
+  --glass-edge: rgba(232, 238, 247, 0.18);
+  --glass-blur: 18px;
 
   // Fluid scale, ratio well above 1.25 between steps. The display max stays at 4.75rem:
   // large enough to lead the page, short of the shouting range.
@@ -33,6 +43,7 @@
   // Semantic, so no one has to invent a 9999 later.
   --z-backdrop: 0;
   --z-content: 10;
+  --z-header: 50;
   --z-sticky: 100;
   --z-modal: 400;
   --z-toast: 500;
@@ -59,9 +70,30 @@ body {
   font-feature-settings: 'tnum' 1;
 }
 
+/**
+ * The glass panel, used for chrome only: header, landing, login.
+ *
+ * Deliberately absent from anywhere figures are read. docs/PRODOTTO.md draws that line, and the
+ * reason is practical rather than stylistic: the reviewer this product is built for checks the
+ * numbers, and frosted glass behind a column of euro amounts costs legibility for decoration.
+ * Panels that carry amounts use .panel-solid instead.
+ */
+.glass {
+  background: var(--glass-tint);
+  border: 1px solid var(--glass-edge);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+}
+
+// Where the numbers live. No blur, no translucency, nothing behind it to see through.
+.panel-solid {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+}
+
 // Focus has to stay visible on a dark surface, and the default Quasar ring does not read here.
 :focus-visible {
-  outline: 2px solid var(--moss);
+  outline: 2px solid var(--azure);
   outline-offset: 3px;
   border-radius: 4px;
 }

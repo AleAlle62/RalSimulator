@@ -3,21 +3,22 @@
 //
 // The palette answers the scene the product is used in: someone at a kitchen table late at
 // night, screen the only light in the room, trying to see what actually lands in the bank.
-// Hence a near-black surface with a moss-phosphor accent, which also happens to miss all three
-// anti-references in docs/PRODOTTO.md: the grey table, the SaaS gradient, the navy-and-gold
-// fintech dashboard.
+// A near-black blue surface with an azure light in it, which also misses all three
+// anti-references in docs/PRODOTTO.md: the grey table, the SaaS gradient, and the navy-and-gold
+// fintech dashboard (this blue is cold and lit, not corporate navy, and the one warm accent is
+// spent on a single figure rather than on gilding).
 
-$primary: #8fcb95; // moss, light enough to carry near-black text on a button
-$secondary: #4e8a5a; // deeper moss, decoration and large text only
-$accent: #d8b45f; // used once, for the figure the eye should land on
+$primary: #7fb2ff; // azure, light enough to carry near-black text on a button
+$secondary: #3c6fc4; // deeper azure, decoration and large text only
+$accent: #f0c070; // spent once, on the figure the eye should land on
 
-$dark: #151b17; // raised surface
-$dark-page: #0c100e; // page
+$dark: #101724; // raised surface
+$dark-page: #080c14; // page
 
-$positive: #8fcb95;
-$negative: #e0796d;
-$info: #7fb4c4;
-$warning: #d8b45f;
+$positive: #7fb2ff;
+$negative: #e08a7d;
+$info: #7fb2ff;
+$warning: #f0c070;
 
 // Numbers are the content of this product, so they align by default rather than on request.
 $typography-font-family:

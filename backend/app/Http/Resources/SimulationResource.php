@@ -15,6 +15,10 @@ class SimulationResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            // Exposed because DELETE /api/me/simulations/{id} keys on it and the owner's list is
+            // where that button lives. Harmless to reveal: the route is scoped to the signed-in
+            // user, so knowing an id belonging to someone else buys nothing.
+            'id' => $this->id,
             'token' => $this->token,
             'createdAt' => $this->created_at,
             'grossAnnualSalary' => $this->gross_annual_salary,

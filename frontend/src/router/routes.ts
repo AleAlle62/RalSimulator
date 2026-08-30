@@ -3,12 +3,28 @@ import type { RouteRecordRaw } from 'vue-router';
 /**
  * No shared layout wrapper: the landing and the calculator are deliberately different worlds
  * (docs/PRODOTTO.md — decoration stops at the CTA), so neither inherits the other's chrome.
+ * AppHeader is what they do share, and each page places it itself.
  */
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: () => import('@/pages/LandingPage.vue'),
-    meta: { title: "Da RAL a stipendio netto — anno d'imposta 2026" },
+  },
+  {
+    path: '/simulazione',
+    component: () => import('@/pages/WizardPage.vue'),
+  },
+  {
+    path: '/risultato/:token',
+    component: () => import('@/pages/ResultPage.vue'),
+  },
+  {
+    path: '/accedi',
+    component: () => import('@/pages/LoginPage.vue'),
+  },
+  {
+    path: '/simulazioni',
+    component: () => import('@/pages/SavedSimulationsPage.vue'),
   },
 
   // Always leave this as last one.

@@ -1,11 +1,9 @@
 <template>
   <main class="landing">
-    <AuroraBackdrop />
+    <SilkBackdrop />
 
     <div class="landing__content">
-      <header class="landing__head">
-        <p class="landing__year">Anno d'imposta 2026</p>
-      </header>
+      <AppHeader />
 
       <div class="landing__middle">
         <h1 class="landing__title">
@@ -36,7 +34,7 @@
         </div>
       </div>
 
-      <footer class="landing__foot">
+      <footer class="landing__foot glass">
         <dl class="landing__facts">
           <div class="landing__fact">
             <dt>Fonti</dt>
@@ -46,18 +44,24 @@
             <dt>Mensilità</dt>
             <dd>13ª e 14ª calcolate davvero: rendono meno di una busta ordinaria.</dd>
           </div>
-          <div class="landing__fact">
-            <dt>Limiti</dt>
-            <dd>Lavoro dipendente, senza familiari a carico. Dichiarati, non nascosti.</dd>
-          </div>
         </dl>
+
+        <div class="landing__author">
+          <span class="landing__by">Alessio Allegrini</span>
+          <ul class="landing__links">
+            <li v-for="link in authorLinks" :key="link.href">
+              <a :href="link.href" target="_blank" rel="noopener noreferrer">{{ link.label }}</a>
+            </li>
+          </ul>
+        </div>
       </footer>
     </div>
   </main>
 </template>
 
 <script setup lang="ts">
-import AuroraBackdrop from '@/components/AuroraBackdrop.vue';
+import AppHeader from '@/components/AppHeader.vue';
+import SilkBackdrop from '@/components/SilkBackdrop.vue';
 import { useCountUp } from '@/composables/useCountUp';
 
 /**
@@ -67,6 +71,13 @@ import { useCountUp } from '@/composables/useCountUp';
  * quietly drift away from what the calculator returns.
  */
 const { displayed: displayedNet } = useCountUp(25967.22, { durationMs: 1100 });
+
+/** Link text carries its own meaning: screen readers announce these out of context. */
+const authorLinks = [
+  { label: 'Sito', href: 'https://alessioallegrini.it' },
+  { label: 'GitHub', href: 'https://github.com/AleAlle62' },
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/alessio-allegrini00/' },
+];
 </script>
 
 <style scoped lang="scss">
@@ -82,19 +93,12 @@ const { displayed: displayedNet } = useCountUp(25967.22, { durationMs: 1100 });
 .landing__content {
   position: relative;
   z-index: var(--z-content);
-  width: min(72rem, 100% - 3rem);
+  width: min(72rem, 100% - 2.5rem);
   margin-inline: auto;
-  padding-block: clamp(1.5rem, 4vh, 3rem);
+  padding-block: clamp(1rem, 3vh, 2rem);
   display: grid;
   grid-template-rows: auto 1fr auto;
-  gap: clamp(1.5rem, 4vh, 3rem);
-}
-
-.landing__year {
-  margin: 0;
-  font-size: var(--step-small);
-  color: var(--moss);
-  font-weight: 600;
+  gap: clamp(1rem, 3vh, 2.25rem);
 }
 
 .landing__middle {
@@ -116,11 +120,11 @@ const { displayed: displayedNet } = useCountUp(25967.22, { durationMs: 1100 });
   color: var(--muted);
   text-decoration: line-through;
   text-decoration-thickness: 2px;
-  text-decoration-color: var(--moss-deep);
+  text-decoration-color: var(--azure-deep);
 }
 
 .landing__net {
-  color: var(--gold);
+  color: var(--amber);
 }
 
 .landing__lead {
@@ -133,7 +137,7 @@ const { displayed: displayedNet } = useCountUp(25967.22, { durationMs: 1100 });
 }
 
 .landing__actions {
-  margin-top: clamp(1.5rem, 3vh, 2.25rem);
+  margin-top: clamp(1.25rem, 3vh, 2.25rem);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -159,42 +163,81 @@ const { displayed: displayedNet } = useCountUp(25967.22, { durationMs: 1100 });
 }
 
 .landing__foot {
-  border-top: 1px solid var(--hairline);
-  padding-top: clamp(1rem, 2.5vh, 1.5rem);
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 2rem;
 }
 
 .landing__facts {
   margin: 0;
-  display: grid;
-  gap: 1rem 2.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2.5rem;
 }
 
 .landing__fact {
+  max-width: 32ch;
+
   dt {
     font-size: var(--step-small);
     font-weight: 700;
-    color: var(--moss);
-    margin-bottom: 0.15rem;
+    color: var(--azure);
   }
 
   dd {
     margin: 0;
     font-size: var(--step-small);
-    line-height: 1.45;
+    line-height: 1.4;
     color: var(--muted);
   }
 }
 
-/* Below the fold is not an option here, so the short-viewport case is designed, not left to
-   chance: the supporting text goes before the headline does. */
-@media (max-height: 640px) {
+.landing__author {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.landing__by {
+  font-size: var(--step-small);
+  color: var(--muted);
+}
+
+.landing__links {
+  display: flex;
+  gap: 0.85rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  a {
+    font-size: var(--step-small);
+    font-weight: 700;
+    color: var(--azure);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 180ms var(--ease-out-quint);
+
+    &:hover {
+      border-bottom-color: var(--azure);
+    }
+  }
+}
+
+/* Below the fold is not an option here, so the short-viewport case is designed rather than left
+   to chance: the supporting facts go before the headline or the author credit do. */
+@media (max-height: 700px) {
   .landing__lead {
     font-size: var(--step-body);
     margin-top: 1rem;
   }
 
-  .landing__foot {
+  .landing__facts {
     display: none;
   }
 }

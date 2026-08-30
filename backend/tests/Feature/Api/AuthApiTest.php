@@ -89,3 +89,18 @@ it('logs out an authenticated user', function () {
 it('refuses logout for a guest', function () {
     $this->postJson('/api/logout')->assertUnauthorized();
 });
+
+it('reports who the session belongs to', function () {
+    $user = User::factory()->create(['name' => 'Alessio']);
+
+    $this->actingAs($user)
+        ->getJson('/api/me')
+        ->assertOk()
+        ->assertJsonPath('user.name', 'Alessio')
+        ->assertJsonMissingPath('user.password');
+});
+
+it('refuses to name a user for a guest', function () {
+    // The SPA calls this at start-up, so a guest hitting it is the ordinary case, not an error.
+    $this->getJson('/api/me')->assertUnauthorized();
+});

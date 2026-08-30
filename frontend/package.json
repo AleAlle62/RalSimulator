@@ -20,6 +20,7 @@
     "ogl": "^1.0.11",
     "pinia": "^4.0.2",
     "quasar": "^2.27.0",
+    "three": "^0.185.1",
     "vue": "^3.5.22",
     "vue-router": "^5.0.6"
   },
@@ -27,6 +28,7 @@
     "@eslint/js": "^10.0.1",
     "@quasar/app-vite": "^3.8.1",
     "@types/node": "^22.19.11",
+    "@types/three": "^0.185.4",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.7.0",
     "autoprefixer": "^10.4.27",
