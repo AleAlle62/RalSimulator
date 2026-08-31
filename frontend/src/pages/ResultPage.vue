@@ -89,10 +89,7 @@
               class="payslip"
               :class="{ 'payslip--extra': slip.kind !== 'ordinary' }"
             >
-              <h3 class="payslip__kind">
-                {{ payslipLabel(slip.kind) }}
-                <span v-if="slip.kind !== 'ordinary'" class="payslip__tag">aggiuntiva</span>
-              </h3>
+              <h3 class="payslip__kind">{{ payslipLabel(slip.kind) }}</h3>
               <p class="payslip__net tabular">{{ formatEuro(slip.net) }}</p>
               <p class="payslip__gross tabular">su {{ formatEuro(slip.gross) }} lordi</p>
             </article>
@@ -592,10 +589,6 @@ onMounted(async () => {
     inset 0 1px 0 rgba(232, 238, 247, 0.2),
     inset 0 -1px 0 rgba(8, 12, 20, 0.35),
     0 10px 24px -14px rgba(8, 12, 20, 0.9);
-  transition:
-    transform 220ms var(--ease-out-quint),
-    border-color 220ms var(--ease-out-quint),
-    box-shadow 220ms var(--ease-out-quint);
 }
 
 /* The specular pool in the top corner: the detail that makes the surface read as curved glass
@@ -609,17 +602,9 @@ onMounted(async () => {
   pointer-events: none;
 }
 
-.payslip:hover {
-  transform: translateY(-2px);
-  border-color: rgba(232, 238, 247, 0.3);
-  box-shadow:
-    inset 0 1px 0 rgba(232, 238, 247, 0.26),
-    inset 0 -1px 0 rgba(8, 12, 20, 0.35),
-    0 16px 34px -16px rgba(8, 12, 20, 1);
-}
-
-/* The extras are the point of this section, so they stay marked — but by the tint of the glass
-   and by the word next to the label, never by colour on its own. */
+/* The extras stay marked, by the tint of their glass. The distinction does not rest on colour
+   alone: "Tredicesima" and "Quattordicesima" name them, and the note above the grid says what
+   makes them different. */
 .payslip--extra {
   background:
     linear-gradient(
@@ -636,22 +621,10 @@ onMounted(async () => {
 }
 
 .payslip__kind {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
   margin: 0;
   font-size: var(--step-small);
   color: var(--muted);
   font-weight: 400;
-}
-
-.payslip__tag {
-  padding: 0.05rem 0.45rem;
-  border: 1px solid var(--glass-edge);
-  border-radius: 999px;
-  font-size: 0.6875rem;
-  letter-spacing: 0.01em;
-  color: var(--muted);
 }
 
 .payslip__net {
