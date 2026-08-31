@@ -151,6 +151,16 @@ cose sempre:
 **Il CSRF in due righe:** serve a impedire che un altro sito faccia richieste al posto tuo usando
 il tuo cookie. Il cookie parte da solo, il token no — quindi solo il nostro sito può mandarlo.
 
+**Un tetto ai tentativi.** Login e registrazione accettano 5 richieste al minuto per account e 20
+per indirizzo, il resto di `/api` ne accetta 60. Senza un limite, indovinare una password a forza
+bruta non è una questione di difficoltà ma di quanto in fretta si sa chiedere.
+
+**E se la richiesta non arriva dal sito?** Sanctum in quel caso non attacca nessuna sessione, così
+`/api/register`, `/api/login` e `/api/logout` rispondono **419** e si fermano lì — prima di leggere
+la password, prima di scrivere qualsiasi riga. È la stessa risposta che riceve un token CSRF
+mancante: da fuori le due sono indistinguibili, e nessuna delle due lascia capire se la password
+era quella giusta.
+
 ---
 
 ## Come funziona il frontend

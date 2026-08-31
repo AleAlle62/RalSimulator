@@ -72,3 +72,10 @@ it('returns 404 for a year that exists but is not published', function () {
 
     $this->getJson('/api/tax-years/2026')->assertNotFound();
 });
+
+it('returns 404 for a year that is not a number', function () {
+    // The controller type hints `int $year`. Without the route constraint these reached it and
+    // died on a TypeError, answering 500 to what is only a URL that names no year.
+    $this->getJson('/api/tax-years/abc')->assertNotFound();
+    $this->getJson('/api/tax-years/abc/municipalities')->assertNotFound();
+});

@@ -104,3 +104,99 @@ it('refuses to name a user for a guest', function () {
     // The SPA calls this at start-up, so a guest hitting it is the ordinary case, not an error.
     $this->getJson('/api/me')->assertUnauthorized();
 });
+
+/*
+|--------------------------------------------------------------------------
+| Requests that carry no session
+|--------------------------------------------------------------------------
+|
+| tests/Pest.php gives every Feature request a Referer, because Sanctum attaches a session to an
+| API request only when it looks like it came from the frontend. That convenience is also what
+| hid these two cases: dropping the header is not exotic, it is what any non browser client does,
+| and it used to be the way past both the CSRF check and the session these endpoints assume.
+|
+*/
+
+it('refuses a session-less login without telling which password was right', function () {
+    User::factory()->create(['email' => 'alessio@example.com', 'password' => 'password123']);
+
+    $right = $this->withoutHeader('Referer')->postJson('/api/login', [
+        'email' => 'alessio@example.com',
+        'password' => 'password123',
+    ]);
+
+    $wrong = $this->withoutHeader('Referer')->postJson('/api/login', [
+        'email' => 'alessio@example.com',
+        'password' => 'wrong-password',
+    ]);
+
+    // The status itself matters less than the two being the same one: 500 for the right password
+    // against 422 for the wrong one was a password oracle, and an unlimited one.
+    $right->assertStatus(419);
+    $wrong->assertStatus(419);
+    $this->assertGuest();
+});
+
+it('does not create an account when the request carries no session', function () {
+    $this->withoutHeader('Referer')->postJson('/api/register', [
+        'name' => 'Ghost',
+        'email' => 'ghost@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+    ])->assertStatus(419);
+
+    // It used to answer 500 with the row already written.
+    $this->assertDatabaseMissing('users', ['email' => 'ghost@example.com']);
+});
+
+it('throttles repeated login attempts', function () {
+    User::factory()->create(['email' => 'alessio@example.com', 'password' => 'password123']);
+
+    foreach (range(1, 5) as $attempt) {
+        $this->postJson('/api/login', [
+            'email' => 'alessio@example.com',
+            'password' => "wrong-{$attempt}",
+        ])->assertUnprocessable();
+    }
+
+    // Even the right password now: the limit is on attempts, not on failures, so guessing
+    // cannot be resumed by happening to land on the correct one.
+    $this->postJson('/api/login', [
+        'email' => 'alessio@example.com',
+        'password' => 'password123',
+    ])->assertStatus(429);
+
+    $this->assertGuest();
+});
+
+it('throttles repeated registrations for the same address', function () {
+    $payload = [
+        'name' => 'Mallory',
+        'email' => 'mallory@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+    ];
+
+    // The first creates the account and the next four are refused as duplicates; what is being
+    // counted is the attempt, whatever came of it.
+    foreach (range(1, 5) as $attempt) {
+        $this->postJson('/api/register', $payload);
+    }
+
+    $this->postJson('/api/register', $payload)->assertStatus(429);
+});
+
+it('does not choke when the email is not a string', function () {
+    // The rate limiter keys on the email and runs before validation, so it sees whatever was
+    // posted. Casting an array to a string there would raise a PHP warning and answer 500 to
+    // what is only a malformed request.
+    $this->postJson('/api/login', ['email' => [], 'password' => 'password123'])
+        ->assertUnprocessable();
+
+    $this->postJson('/api/register', [
+        'name' => 'Mallory',
+        'email' => ['a' => 'b'],
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+    ])->assertUnprocessable();
+});
