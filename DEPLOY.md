@@ -71,7 +71,11 @@ Dalla console dell'ambiente:
 
 ```bash
 php artisan db:seed --force          # le tabelle fiscali 2026
-php artisan make:filament-user       # crea un account
+
+# Le opzioni servono: il runner dei comandi di Cloud non è interattivo, e senza di
+# esse make:filament-user resterebbe fermo a chiedere nome, email e password.
+php artisan make:filament-user --name="Nome Cognome" --email=tua@email --password='...'
+
 php artisan user:promote tua@email   # senza questo /admin risponde 403
 ```
 
