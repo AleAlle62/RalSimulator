@@ -3,10 +3,9 @@
 Simulatore da RAL a stipendio netto per l'anno d'imposta 2026, con salvataggio e condivisione
 delle simulazioni.
 
-Nasce come take-home per un colloquio in **Jet HR** ([istruction.md](istruction.md)). La traccia
-dice esplicitamente che non si valuta l'uso di tool generativi ma se chi consegna **ha capito le
-logiche ed è in controllo**. Da qui discende tutto il resto: il motore fiscale, i suoi test e le
-fonti citate valgono più di qualsiasi cosa lato interfaccia.
+La priorità del progetto è essere **in controllo delle logiche**, non coprire superficie: il
+motore fiscale, i suoi test e le fonti citate valgono più di qualsiasi cosa lato interfaccia.
+Un numero che nessuno sa difendere è peggio di una funzionalità che manca.
 
 > Le linee guida di sviluppo (SOLID, naming, clean code, testing) arrivano dal `CLAUDE.md`
 > globale. Qui c'è solo ciò che è specifico di questo progetto.
