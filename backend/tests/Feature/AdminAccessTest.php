@@ -8,7 +8,6 @@ use Filament\Facades\Filament;
  * `is_admin` the only thing standing between a self-registered visitor and the tax rates, so
  * it is worth testing rather than trusting.
  */
-
 it('keeps an ordinary user out of the admin panel', function () {
     $user = User::factory()->create();
 

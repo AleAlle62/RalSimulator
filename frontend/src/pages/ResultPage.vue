@@ -212,6 +212,7 @@
             />
           </div>
 
+          <p v-if="copyFailure" class="keep__error" role="alert">{{ copyFailure }}</p>
           <p v-if="saveFailure" class="keep__error" role="alert">{{ saveFailure }}</p>
         </section>
 
@@ -268,6 +269,7 @@ const { formatEuro, formatPercent } = useCurrency();
 
 const failure = ref<string | null>(null);
 const copied = ref(false);
+const copyFailure = ref<string | null>(null);
 const saving = ref(false);
 const saveFailure = ref<string | null>(null);
 
@@ -329,10 +331,30 @@ const payslipLabel = (kind: PayslipKind) => {
   }
 };
 
+/**
+ * Copia /s/{token}, non l'indirizzo corrente.
+ *
+ * Le due pagine mostrano la stessa simulazione, ma solo /s/{token} è renderizzata dal server:
+ * incollata in una chat o in una mail porta con sé i meta OpenGraph con il netto, mentre
+ * /risultato/{token} è la SPA e per un crawler è una pagina vuota. Chi apre il link atterra
+ * comunque sul risultato completo, dal pulsante che quella pagina contiene.
+ *
+ * writeText può fallire — appunti negati, contesto non sicuro, Safari fuori da un gesto
+ * dell'utente. Senza il catch la promise resterebbe non gestita e il pulsante non direbbe nulla:
+ * l'utente crederebbe di avere un link negli appunti e non ce l'avrebbe.
+ */
 async function copyLink() {
-  await navigator.clipboard.writeText(window.location.href);
-  copied.value = true;
-  setTimeout(() => (copied.value = false), 2000);
+  const link = new URL(`/s/${route.params.token as string}`, window.location.origin).toString();
+
+  copyFailure.value = null;
+
+  try {
+    await navigator.clipboard.writeText(link);
+    copied.value = true;
+    setTimeout(() => (copied.value = false), 2000);
+  } catch {
+    copyFailure.value = `Il browser non mi ha lasciato usare gli appunti. Il link è ${link}`;
+  }
 }
 
 async function save() {

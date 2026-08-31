@@ -1,6 +1,17 @@
 <?php
 
+use App\Http\Controllers\SharedSimulationController;
 use Illuminate\Support\Facades\Route;
+
+/**
+ * La simulazione condivisa, renderizzata dal server.
+ *
+ * Sta prima della catch-all e non fra i prefissi esclusi dal suo `where`, ed è deliberato:
+ * quel vincolo è un lookahead ancorato all'inizio del percorso, quindi escludere "s" farebbe
+ * sparire anche /simulazione e /simulazioni. Laravel confronta le rotte nell'ordine in cui sono
+ * dichiarate, e dichiararla qui sopra è sufficiente perché vinca su /s/{token} soltanto.
+ */
+Route::get('/s/{token}', SharedSimulationController::class)->name('simulation.share');
 
 /**
  * Everything that is not /api or the Filament panel is the SPA's business: Vue Router runs in

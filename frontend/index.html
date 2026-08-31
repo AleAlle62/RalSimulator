@@ -7,6 +7,23 @@
     <meta name="description" content="<%= productDescription %>" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="msapplication-tap-highlight" content="no" />
+
+    <!--
+      Anteprima dei link. Senza queste righe l'indirizzo incollato in una chat, in una mail o su
+      un social resta testo nudo: i crawler non eseguono JavaScript, quindi di questa SPA vedono
+      soltanto ciò che sta qui dentro. Nessun og:image: non esiste ancora un'immagine di
+      anteprima disegnata, e una favicon da 128px stirata a 1200x630 farebbe più danno che altro,
+      per questo la card di Twitter è "summary" e non "summary_large_image".
+      La pagina /s/{token} sovrascrive questi valori con i numeri della singola simulazione.
+    -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="<%= productName %>" />
+    <meta property="og:title" content="<%= productName %>" />
+    <meta property="og:description" content="<%= productDescription %>" />
+    <meta property="og:locale" content="it_IT" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="<%= productName %>" />
+    <meta name="twitter:description" content="<%= productDescription %>" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1<% if (ctx.mode.cordova || ctx.mode.capacitor) { %>, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover<% } %>"

@@ -1,2 +1,10 @@
+# Il calcolatore e la pagina di presentazione sono pubblici: quelli si indicizzano pure.
+#
+# Due eccezioni. /admin è il pannello Filament, e la sua schermata di accesso non ha motivo di
+# comparire in una ricerca. /s/ sono le simulazioni condivise: il token non è indovinabile, ma
+# restano cifre di stipendio di qualcuno, e un link finito su una pagina pubblica non deve
+# trascinarle in un indice. Quelle pagine portano comunque un meta robots noindex — questo file
+# è la prima linea, il meta è quella che regge se il crawler arriva senza passare di qui.
 User-agent: *
-Disallow:
+Disallow: /admin
+Disallow: /s/

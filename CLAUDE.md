@@ -116,7 +116,7 @@ La sezione «I calcoli» del [README](README.md#i-calcoli) tiene le costanti, l'
 operazioni e i tre gradini. **Le fonti primarie stanno nel database**, in `source_url` e
 `source_label` accanto a ogni costante: è lì che si verifica un valore, non in un file.
 
-I casi di verifica con i valori attesi sono la suite Pest — `backend/tests/`, 121 test. Chi
+I casi di verifica con i valori attesi sono la suite Pest — `backend/tests/`, 131 test. Chi
 tocca il motore parte da quelli.
 
 La specifica estesa era in `docs/FISCO-2026.md`, rimossa il 30/08/2026 accorpando la

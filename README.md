@@ -30,7 +30,7 @@ cd frontend && pnpm install && pnpm dev
 
 Apri **http://localhost:9200**. Non aprire la 5174: quella è solo Laravel, senza interfaccia.
 
-Test: `cd backend && ./vendor/bin/pest` (121 test).
+Test: `cd backend && ./vendor/bin/pest` (131 test).
 
 ---
 
@@ -183,6 +183,14 @@ Il percorso: `/` presentazione → `/simulazione` le quattro domande → `/risul
 
 **Il salvataggio.** Ogni simulazione viene salvata sempre, anche senza account: resta raggiungibile
 dal suo link. Se poi ti registri, il pulsante «Salva» la collega al tuo account (`claim`).
+
+**La condivisione.** «Copia il link» non copia l'indirizzo corrente ma **`/s/{token}`**, che non è
+la SPA: è una pagina renderizzata da Laravel con Blade. Serve perché i crawler non eseguono
+JavaScript — di una SPA leggono solo l'`<head>` statico, identico per ogni simulazione. Quella
+pagina invece porta nei meta OpenGraph il netto di *questa* simulazione, così il link incollato in
+una chat o in una mail mostra la cifra invece di una descrizione generica. Chi lo apre trova i
+numeri e un pulsante che porta al risultato completo nella SPA. Non è indicizzabile: `noindex` nel
+markup e `Disallow: /s/` in `robots.txt`, perché restano cifre di stipendio di qualcuno.
 
 ---
 
