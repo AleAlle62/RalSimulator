@@ -89,7 +89,10 @@
               class="payslip"
               :class="{ 'payslip--extra': slip.kind !== 'ordinary' }"
             >
-              <h3 class="payslip__kind">{{ payslipLabel(slip.kind) }}</h3>
+              <h3 class="payslip__kind">
+                {{ payslipLabel(slip.kind) }}
+                <span v-if="slip.kind !== 'ordinary'" class="payslip__tag">aggiuntiva</span>
+              </h3>
               <p class="payslip__net tabular">{{ formatEuro(slip.net) }}</p>
               <p class="payslip__gross tabular">su {{ formatEuro(slip.gross) }} lordi</p>
             </article>
@@ -566,24 +569,89 @@ onMounted(async () => {
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
 }
 
+/* Glass built from layers, not from backdrop-filter. These cards sit inside .glass-panel,
+   whose tint is 0.93 opaque: there is nothing left behind them to refract, so a nested blur
+   would buy a compositing layer and show nothing. What reads as glass here is the diagonal
+   sheen, the lit top edge and the shadow that lifts the card off the panel. */
 .payslip {
-  background: var(--surface-raised);
-  border: 1px solid var(--hairline);
-  border-radius: 12px;
-  padding: 0.9rem 1rem;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--glass-edge);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  background:
+    linear-gradient(
+      158deg,
+      rgba(232, 238, 247, 0.1) 0%,
+      rgba(232, 238, 247, 0.03) 38%,
+      rgba(232, 238, 247, 0) 64%
+    ),
+    var(--surface-raised);
+  box-shadow:
+    inset 0 1px 0 rgba(232, 238, 247, 0.2),
+    inset 0 -1px 0 rgba(8, 12, 20, 0.35),
+    0 10px 24px -14px rgba(8, 12, 20, 0.9);
+  transition:
+    transform 220ms var(--ease-out-quint),
+    border-color 220ms var(--ease-out-quint),
+    box-shadow 220ms var(--ease-out-quint);
 }
 
-/* The extras are the point of this section, so they are marked rather than left to be inferred
-   from the label alone. */
+/* The specular pool in the top corner: the detail that makes the surface read as curved glass
+   rather than as a flat tinted rectangle. Behind the text, above the base gradient. */
+.payslip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(120% 90% at 8% -12%, rgba(232, 238, 247, 0.14), transparent 58%);
+  pointer-events: none;
+}
+
+.payslip:hover {
+  transform: translateY(-2px);
+  border-color: rgba(232, 238, 247, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(232, 238, 247, 0.26),
+    inset 0 -1px 0 rgba(8, 12, 20, 0.35),
+    0 16px 34px -16px rgba(8, 12, 20, 1);
+}
+
+/* The extras are the point of this section, so they stay marked — but by the tint of the glass
+   and by the word next to the label, never by colour on its own. */
 .payslip--extra {
-  border-left: 3px solid var(--azure-deep);
+  background:
+    linear-gradient(
+      158deg,
+      rgba(127, 178, 255, 0.14) 0%,
+      rgba(127, 178, 255, 0.04) 40%,
+      rgba(232, 238, 247, 0) 66%
+    ),
+    var(--surface-raised);
+}
+
+.payslip--extra::before {
+  background: radial-gradient(120% 90% at 8% -12%, rgba(127, 178, 255, 0.18), transparent 58%);
 }
 
 .payslip__kind {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   margin: 0;
   font-size: var(--step-small);
   color: var(--muted);
   font-weight: 400;
+}
+
+.payslip__tag {
+  padding: 0.05rem 0.45rem;
+  border: 1px solid var(--glass-edge);
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  letter-spacing: 0.01em;
+  color: var(--muted);
 }
 
 .payslip__net {
