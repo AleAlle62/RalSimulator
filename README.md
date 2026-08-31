@@ -12,6 +12,8 @@ frontend/   SPA Quasar (Vue 3)  ──build──►  backend/public/
 backend/    Laravel — API, motore fiscale, login, pannello admin
 ```
 
+Per metterlo online: **[DEPLOY.md](DEPLOY.md)**.
+
 ---
 
 ## Avviare il progetto
