@@ -15,7 +15,7 @@ sessione Sanctum e i meta OpenGraph di `/s/{token}`. Sarebbe riscrivere l'autent
 | --- | --- |
 | PHP | 8.3+ (`composer.json` richiede `^8.3`) |
 | Node | 22.12+ solo in fase di build |
-| Database | Postgres gestito — **non** SQLite, vedi sotto |
+| Database | MySQL o Postgres gestito — **non** SQLite, vedi sotto |
 
 ---
 
@@ -26,7 +26,11 @@ l'applicazione, scegli **`backend/`**. Diventa la root di build e di runtime, ma
 build tutte le directory del repository restano accessibili — ed è ciò che permette allo
 script qui sotto di compilare la SPA che sta in `frontend/`.
 
-Poi crea un **Postgres** dal dashboard e collegalo all'ambiente.
+Poi crea un **database** dal dashboard, nella stessa regione, e collegalo all'ambiente.
+
+MySQL o Postgres è indifferente: nessuna migration usa SQL raw e l'unica colonna `json`
+(`simulations.result`) viene sempre scritta e letta intera, mai interrogata. Cambia solo il
+valore di `DB_CONNECTION` (`mysql` o `pgsql`).
 
 ---
 
@@ -96,10 +100,10 @@ Il riferimento commentato è in **`backend/.env.production.example`**: contiene 
 cambia rispetto a `.env.example`, con accanto il perché di ogni valore.
 
 In breve: `APP_ENV=production`, `APP_DEBUG=false`, `APP_KEY` generata, `APP_URL` con https,
-`DB_CONNECTION=pgsql`, `LOG_CHANNEL=stderr`, `SESSION_SECURE_COOKIE=true`.
+`DB_CONNECTION` (`mysql` o `pgsql`), `LOG_CHANNEL=stderr`, `SESSION_SECURE_COOKIE=true`.
 
 Le credenziali del database (`DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`,
-`DB_PASSWORD`) le inietta Cloud quando colleghi il Postgres: non vanno scritte a mano.
+`DB_PASSWORD`) le inietta Cloud quando colleghi il database: non vanno scritte a mano.
 
 ---
 
