@@ -44,8 +44,10 @@ composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
 
 # La SPA compilata non è versionata: backend/public/index.html, assets/ e icons/ stanno nel
 # .gitignore perché sono artefatti. Vanno quindi ricostruiti a ogni deploy.
-corepack enable
-corepack prepare pnpm@10 --activate
+# pnpm, non npm: frontend/ ha un pnpm-lock.yaml e nessun package-lock.json.
+# Si installa con npm perché corepack non è nel PATH dell'immagine di build di Cloud.
+npm install -g pnpm@10
+
 cd ../frontend
 pnpm install --frozen-lockfile
 pnpm build          # quasar build, poi scripts/copy-to-laravel.mjs copia in backend/public
