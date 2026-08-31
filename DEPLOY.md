@@ -40,10 +40,12 @@ Da incollare nelle impostazioni dell'ambiente, **al posto** di quelli di default
 includono `npm ci && npm run build`, qui da togliere: vedi «Cose da non fare»).
 
 ```bash
-# Senza --prefer-dist: quel flag rende obbligatorio lo zip da codeload.github.com
-# ("Source fallback is disabled"), e quando GitHub risponde 400 il build muore.
-# Senza, Composer ripiega sul clone git del pacchetto che non riesce a scaricare.
-composer install --no-dev --no-interaction --optimize-autoloader
+# --prefer-source non è un dettaglio: senza, Composer scarica gli zip da
+# api.github.com/.../zipball, che redirige su codeload.github.com — e codeload
+# risponde 400 a ogni pacchetto dall'ambiente di build di Cloud. Il flag lo
+# aggira facendo clonare i pacchetti da github.com via git. Più lento (110
+# cloni), ma è l'unica variante che completa.
+composer install --no-dev --no-interaction --optimize-autoloader --prefer-source
 
 # La SPA compilata non è versionata: backend/public/index.html, assets/ e icons/ stanno nel
 # .gitignore perché sono artefatti. Vanno quindi ricostruiti a ogni deploy.
