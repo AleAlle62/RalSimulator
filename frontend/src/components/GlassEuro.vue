@@ -84,6 +84,14 @@ onMounted(() => {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   container.appendChild(renderer.domElement);
 
+  // setSize(..., false) below skips the CSS-pixel style Three.js would otherwise set, so
+  // without this the canvas falls back to its width/height attributes — set in device pixels,
+  // up to 2x too large on a HiDPI screen — as its on-screen size, overflowing `.euro` instead of
+  // filling it. Same fix as Silk.vue applies to its own raw canvas.
+  renderer.domElement.style.width = '100%';
+  renderer.domElement.style.height = '100%';
+  renderer.domElement.style.display = 'block';
+
   const geometry = new THREE.ExtrudeGeometry([buildRing(), buildBar(0.2), buildBar(-0.2)], {
     depth: 0.42,
     curveSegments: 48,
